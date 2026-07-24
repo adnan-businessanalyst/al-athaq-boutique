@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Marcellus, Work_Sans } from "next/font/google";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const marcellus = Marcellus({
@@ -17,9 +18,7 @@ const workSans = Work_Sans({
   display: "swap",
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "http://localhost:3000";
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

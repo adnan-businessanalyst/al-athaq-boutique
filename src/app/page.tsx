@@ -6,14 +6,13 @@ import { Products } from "@/components/Products";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
 import { getHomepageData } from "@/lib/data";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
   const data = await getHomepageData();
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "http://localhost:3000";
+  const siteUrl = getSiteUrl();
 
   return (
     <>
