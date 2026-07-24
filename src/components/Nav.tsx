@@ -72,17 +72,17 @@ export function Nav() {
     <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
       <nav
         aria-label="Primary"
-        className={`mx-auto flex w-full max-w-content items-center justify-between gap-2 rounded-pill border border-white/10 px-3 py-2.5 transition-all duration-nav sm:px-5 ${barTone}`}
+        className={`mx-auto grid w-full max-w-content grid-cols-[auto_1fr_auto] items-center gap-2 rounded-pill border border-white/10 px-3 py-2.5 transition-all duration-nav sm:px-5 md:grid-cols-[1fr_auto_1fr] ${barTone}`}
       >
         <Link
           href="/"
-          className="group inline-flex min-h-11 items-center rounded-pill focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-athaq-teal"
+          className="group inline-flex min-h-11 items-center justify-self-start rounded-pill focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-athaq-teal"
           aria-label="Al Athaq Boutique home"
         >
           <BrandLogo size="nav" className="shadow-sm ring-1 ring-white/10" />
         </Link>
 
-        <div className="hidden items-center gap-1 md:flex lg:gap-2">
+        <div className="hidden items-center justify-center gap-1 md:flex lg:gap-2">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -98,10 +98,13 @@ export function Nav() {
           >
             {dict.nav.discover}
           </Link>
-          <LanguageSwitcher tone={scrolled ? "light" : "dark"} className="ms-1" />
         </div>
 
-        <div className="flex items-center gap-1.5 md:hidden">
+        <div className="hidden items-center justify-self-end md:flex">
+          <LanguageSwitcher tone={scrolled ? "light" : "dark"} />
+        </div>
+
+        <div className="flex items-center gap-1.5 justify-self-end md:hidden">
           <LanguageSwitcher tone={scrolled ? "light" : "dark"} />
           <button
             ref={menuBtnRef}
