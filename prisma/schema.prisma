@@ -1,0 +1,94 @@
+// Al Athaq Boutique — Prisma schema
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MediaType {
+  image
+  video
+  svg
+}
+
+enum FeaturedPosition {
+  LARGE
+  WIDE
+  SMALL_A
+  SMALL_B
+}
+
+model SiteSettings {
+  id String @id @default("default")
+
+  tagline String @default("Tradition you can carry home.")
+
+  heroEyebrow  String
+  heroTitle    String
+  heroSubtitle String
+  heroMediaUrl String
+  heroMediaType MediaType @default(image)
+  heroPosterUrl String?
+
+  ctaPrimaryLabel  String
+  ctaPrimaryHref   String
+  ctaSecondaryLabel String
+  ctaSecondaryHref  String
+
+  storyHeading    String
+  storyParagraph1 String
+  storyParagraph2 String
+  storyCtaLabel   String
+  storyCtaHref    String
+  storyMediaUrl   String
+  storyMediaType  MediaType @default(image)
+  storyPosterUrl  String?
+  storyBgUrl      String
+  storyBgType     MediaType @default(image)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FeaturedTile {
+  id       String           @id @default(cuid())
+  position FeaturedPosition @unique
+  tag      String
+  title    String
+  mediaUrl String
+  mediaType MediaType       @default(image)
+  posterUrl String?
+  alt      String
+  link     String
+  sortOrder Int             @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String
+  category    String
+  mediaUrl    String
+  mediaType   MediaType @default(image)
+  posterUrl   String?
+  alt         String
+  sortOrder   Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+  @@index([slug])
+  @@index([category])
+}
