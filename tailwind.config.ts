@@ -55,10 +55,16 @@ const config: Config = {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        "lang-item-in": {
+          "0%": { opacity: "0", transform: "translateY(10px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
       },
       animation: {
         "fly-up": "fly-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both",
         "fade-in": "fade-in 0.5s ease both",
+        "lang-item-in":
+          "lang-item-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },

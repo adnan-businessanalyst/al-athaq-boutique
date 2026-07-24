@@ -1,48 +1,57 @@
+"use client";
+
 import Link from "next/link";
 import { BrandLogo } from "@/components/BrandLogo";
+import { useLanguage } from "@/components/LanguageProvider";
 
-type FooterProps = {
-  tagline: string;
-};
-
-const COLUMNS = [
-  {
-    title: "Shop",
-    links: [
-      { href: "#products", label: "All products" },
-      { href: "#featured", label: "Featured" },
-      { href: "#products", label: "Gift sets" },
-    ],
-  },
-  {
-    title: "Boutique",
-    links: [
-      { href: "#our-story", label: "Our story" },
-      { href: "#hero", label: "Visit" },
-      { href: "mailto:hello@alathaq.com", label: "Contact" },
-    ],
-  },
-  {
-    title: "Follow",
-    links: [
-      { href: "https://instagram.com", label: "Instagram" },
-      { href: "https://pinterest.com", label: "Pinterest" },
-      { href: "https://facebook.com", label: "Facebook" },
-    ],
-  },
-] as const;
-
-export function Footer({ tagline }: FooterProps) {
+export function Footer() {
+  const { dict } = useLanguage();
   const year = new Date().getFullYear();
 
+  const columns = [
+    {
+      title: dict.footer.shop,
+      links: [
+        { href: "#products", label: dict.footer.allProducts },
+        { href: "#featured", label: dict.footer.featured },
+        { href: "#products", label: dict.footer.giftSets },
+      ],
+    },
+    {
+      title: dict.footer.boutique,
+      links: [
+        { href: "#our-story", label: dict.footer.ourStory },
+        { href: "#hero", label: dict.footer.visit },
+        { href: "mailto:hello@alathaq.com", label: dict.footer.contact },
+      ],
+    },
+    {
+      title: dict.footer.follow,
+      links: [
+        { href: "https://instagram.com", label: "Instagram" },
+        { href: "https://pinterest.com", label: "Pinterest" },
+        { href: "https://facebook.com", label: "Facebook" },
+      ],
+    },
+  ];
+
   return (
-    <footer className="relative overflow-hidden bg-footer-gradient text-athaq-cream">
+    <footer className="relative overflow-hidden text-athaq-cream">
+      {/* Full-bleed tribal pattern */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/footer-bg.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+      />
+      {/* Black overlay — 85% transparent */}
       <div
-        className="pointer-events-none absolute inset-0 bg-tile-pattern bg-tile-dot opacity-25"
+        className="pointer-events-none absolute inset-0 bg-black/90"
         aria-hidden="true"
       />
 
-      <div className="relative mx-auto max-w-content px-5 py-14 sm:px-8 sm:py-16">
+      <div className="relative z-10 mx-auto max-w-content px-5 py-14 sm:px-8 sm:py-16">
         <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(3,minmax(0,1fr))] md:gap-8">
           <div>
             <Link
@@ -53,11 +62,11 @@ export function Footer({ tagline }: FooterProps) {
               <BrandLogo size="footer" className="shadow-md ring-1 ring-white/15" />
             </Link>
             <p className="mt-4 max-w-xs font-display text-lg text-athaq-purple-tint">
-              {tagline}
+              {dict.footer.tagline}
             </p>
           </div>
 
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <div key={col.title}>
               <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-athaq-purple-tint">
                 {col.title}
@@ -85,19 +94,21 @@ export function Footer({ tagline }: FooterProps) {
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-6 text-sm text-athaq-cream/70 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} Al Athaq Boutique. All rights reserved.</p>
+          <p>
+            © {year} Al Athaq Boutique. {dict.footer.rights}
+          </p>
           <div className="flex flex-wrap gap-x-5 gap-y-1">
             <Link
               href="/privacy"
               className="inline-flex min-h-11 items-center hover:text-white"
             >
-              Privacy
+              {dict.footer.privacy}
             </Link>
             <Link
               href="/terms"
               className="inline-flex min-h-11 items-center hover:text-white"
             >
-              Terms
+              {dict.footer.terms}
             </Link>
           </div>
         </div>

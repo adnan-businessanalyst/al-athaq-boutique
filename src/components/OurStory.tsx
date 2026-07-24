@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Media } from "@/components/Media";
 import { DiamondMotif } from "@/components/DiamondMotif";
+import { useLanguage } from "@/components/LanguageProvider";
 import type { SiteContent } from "@/types";
 
 type OurStoryProps = {
@@ -8,13 +11,14 @@ type OurStoryProps = {
 };
 
 export function OurStory({ settings }: OurStoryProps) {
+  const { dict } = useLanguage();
+
   return (
     <section
       id="our-story"
       aria-labelledby="story-heading"
       className="relative overflow-hidden px-5 py-[clamp(3.5rem,8vw,6.5rem)] sm:px-8"
     >
-      {/* Background: our-story-bg asset (any supported format) */}
       <div className="absolute inset-0 bg-story-fallback" aria-hidden="true" />
       <Media
         src={settings.storyBg.mediaUrl}
@@ -25,7 +29,6 @@ export function OurStory({ settings }: OurStoryProps) {
         sizes="100vw"
         priority
       />
-      {/* Soft readability scrim — keep the asset visible */}
       <div
         className="absolute inset-0 bg-athaq-purple-dark/55"
         aria-hidden="true"
@@ -49,31 +52,31 @@ export function OurStory({ settings }: OurStoryProps) {
           <DiamondMotif
             size={56}
             tone="light"
-            className="absolute -right-2 -top-2 sm:-right-4 sm:-top-4"
+            className="absolute -end-2 -top-2 sm:-end-4 sm:-top-4"
           />
         </div>
 
         <div className="text-athaq-cream">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-athaq-purple-tint">
-            Boutique
+            {dict.story.eyebrow}
           </p>
           <h2
             id="story-heading"
             className="font-display text-[clamp(1.85rem,4vw,2.85rem)] leading-tight"
           >
-            {settings.storyHeading}
+            {dict.story.heading}
           </h2>
           <p className="mt-5 max-w-prose text-base leading-relaxed text-athaq-cream/90 sm:text-lg">
-            {settings.storyParagraph1}
+            {dict.story.p1}
           </p>
           <p className="mt-4 max-w-prose text-base leading-relaxed text-athaq-cream/85 sm:text-lg">
-            {settings.storyParagraph2}
+            {dict.story.p2}
           </p>
           <Link
             href={settings.storyCtaHref}
             className="mt-8 inline-flex min-h-12 items-center justify-center rounded-pill bg-athaq-teal px-7 text-sm font-semibold text-white transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-athaq-teal"
           >
-            {settings.storyCtaLabel}
+            {dict.story.cta}
           </Link>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Marcellus, Work_Sans } from "next/font/google";
+import { LanguageProvider } from "@/components/LanguageProvider";
 import "./globals.css";
 
 const marcellus = Marcellus({
@@ -100,9 +101,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${marcellus.variable} ${workSans.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${marcellus.variable} ${workSans.variable}`}>
       <body className="min-h-screen bg-athaq-cream font-sans text-athaq-ink antialiased">
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

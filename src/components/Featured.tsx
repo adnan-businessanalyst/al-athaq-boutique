@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Media } from "@/components/Media";
+import { useLanguage } from "@/components/LanguageProvider";
 import type { FeaturedTileContent } from "@/types";
 
 type FeaturedProps = {
@@ -16,7 +17,17 @@ const positionClass: Record<FeaturedTileContent["position"], string> = {
   SMALL_B: "min-h-[220px] md:min-h-[250px]",
 };
 
-function Tile({ tile }: { tile: FeaturedTileContent }) {
+function Tile({
+  tile,
+  tag,
+  title,
+  viewLabel,
+}: {
+  tile: FeaturedTileContent;
+  tag: string;
+  title: string;
+  viewLabel: string;
+}) {
   const [revealed, setRevealed] = useState(false);
 
   return (
@@ -35,7 +46,6 @@ function Tile({ tile }: { tile: FeaturedTileContent }) {
         imgClassName="object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
       />
 
-      {/* Always-visible gradient on touch / when revealed; hover on desktop */}
       <div
         className={`absolute inset-0 bg-gradient-to-t from-athaq-purple-dark/90 via-athaq-purple/40 to-transparent transition-opacity duration-300 ${
           revealed
@@ -52,25 +62,24 @@ function Tile({ tile }: { tile: FeaturedTileContent }) {
         }`}
       >
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-athaq-purple-tint">
-          {tile.tag}
+          {tag}
         </span>
         <h3 className="font-display text-xl text-athaq-cream sm:text-2xl">
-          {tile.title}
+          {title}
         </h3>
         <Link
           href={tile.link}
           className="relative z-20 mt-1 inline-flex min-h-11 items-center rounded-pill bg-athaq-cream px-5 text-sm font-semibold text-athaq-ink transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-athaq-cream"
           onFocus={() => setRevealed(true)}
         >
-          View
+          {viewLabel}
         </Link>
       </div>
 
-      {/* Tap to toggle reveal on coarse pointers (content layer stays clickable) */}
       <button
         type="button"
         className="absolute inset-0 z-[5] md:hidden"
-        aria-label={`Reveal details for ${tile.title}`}
+        aria-label={title}
         onClick={() => setRevealed((v) => !v)}
       />
     </article>
@@ -78,6 +87,7 @@ function Tile({ tile }: { tile: FeaturedTileContent }) {
 }
 
 export function Featured({ tiles }: FeaturedProps) {
+  const { dict } = useLanguage();
   const ordered = ["LARGE", "WIDE", "SMALL_A", "SMALL_B"] as const;
   const byPos = Object.fromEntries(tiles.map((t) => [t.position, t])) as Record<
     FeaturedTileContent["position"],
@@ -97,13 +107,13 @@ export function Featured({ tiles }: FeaturedProps) {
       <div className="relative mx-auto max-w-content">
         <div className="mb-8 max-w-xl sm:mb-10">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-athaq-teal">
-            Featured
+            {dict.featured.eyebrow}
           </p>
           <h2
             id="featured-heading"
             className="font-display text-[clamp(1.75rem,4vw,2.75rem)] text-athaq-ink"
           >
-            Chosen for the modern souk
+            {dict.featured.heading}
           </h2>
         </div>
 
@@ -111,7 +121,19 @@ export function Featured({ tiles }: FeaturedProps) {
           {ordered.map((pos) => {
             const tile = byPos[pos];
             if (!tile) return null;
-            return <Tile key={tile.id} tile={tile} />;
+            const copy = dict.featured.tiles[pos] ?? {
+              tag: tile.tag,
+              title: tile.title,
+            };
+            return (
+              <Tile
+                key={tile.id}
+                tile={tile}
+                tag={copy.tag}
+                title={copy.title}
+                viewLabel={dict.featured.view}
+              />
+            );
           })}
         </div>
       </div>

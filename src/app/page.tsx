@@ -29,7 +29,7 @@ export default async function HomePage() {
         <OurStory settings={data.settings} />
         <Products products={data.products} />
       </main>
-      <Footer tagline={data.settings.tagline} />
+      <Footer />
     </>
   );
 }
