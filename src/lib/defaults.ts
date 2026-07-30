@@ -101,89 +101,16 @@ export function buildDefaultFeatured(): FeaturedTileContent[] {
   }));
 }
 
+/** Products are database-driven only — never hardcode a live catalog. */
 export function buildDefaultProducts(): ProductContent[] {
-  const items: Array<{
-    slug: string;
-    name: string;
-    description: string;
-    category: string;
-    basename: string;
-    sortOrder: number;
-  }> = [
-    {
-      slug: "royal-oud-bakhoor",
-      name: "Royal Oud Bakhoor",
-      description: "A deep, resinous blend for ceremonial evenings.",
-      category: "Incense",
-      basename: "product-1",
-      sortOrder: 1,
-    },
-    {
-      slug: "amber-rose-incense",
-      name: "Amber Rose Incense",
-      description: "Warm amber wrapped in soft floral notes.",
-      category: "Incense",
-      basename: "product-2",
-      sortOrder: 2,
-    },
-    {
-      slug: "mashrabiya-lantern",
-      name: "Mashrabiya Lantern",
-      description: "Pierced metalwork that casts patterned light.",
-      category: "Lanterns",
-      basename: "product-3",
-      sortOrder: 3,
-    },
-    {
-      slug: "souk-textile-runner",
-      name: "Souk Textile Runner",
-      description: "Handwoven warmth for tables and thresholds.",
-      category: "Textiles",
-      basename: "product-4",
-      sortOrder: 4,
-    },
-    {
-      slug: "crescent-pendant",
-      name: "Crescent Pendant",
-      description: "A refined everyday talisman in warm metal.",
-      category: "Jewelry",
-      basename: "product-5",
-      sortOrder: 5,
-    },
-    {
-      slug: "desert-musk-set",
-      name: "Desert Musk Gift Set",
-      description: "Bakhoor and burner, ready to give.",
-      category: "Gifts",
-      basename: "product-6",
-      sortOrder: 6,
-    },
-    {
-      slug: "heritage-scarf",
-      name: "Heritage Scarf",
-      description: "Light textile with a classic geometric border.",
-      category: "Textiles",
-      basename: "product-7",
-      sortOrder: 7,
-    },
-  ];
-
-  return items.map((p) => ({
-    id: `product-${p.slug}`,
-    slug: p.slug,
-    name: p.name,
-    description: p.description,
-    category: p.category,
-    media: asset(p.basename),
-    sortOrder: p.sortOrder,
-  }));
+  return [];
 }
 
 export function buildDefaultHomepage(): HomepageData {
   return {
     settings: buildDefaultSettings(),
     featured: buildDefaultFeatured(),
-    products: buildDefaultProducts(),
+    products: [],
     fromDatabase: false,
   };
 }

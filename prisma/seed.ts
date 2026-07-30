@@ -1,6 +1,7 @@
 import { PrismaClient, MediaType, FeaturedPosition } from "@prisma/client";
 import { existsSync } from "fs";
 import path from "path";
+import argon2 from "argon2";
 
 const prisma = new PrismaClient();
 
@@ -230,7 +231,35 @@ async function main() {
     });
   }
 
-  console.log("Seed complete: SiteSettings, FeaturedTiles, Products.");
+  // Bootstrap admin from env (hashed — never store plaintext)
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const bootstrapPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+  if (adminEmail && bootstrapPassword) {
+    const existing = await prisma.adminUser.findUnique({
+      where: { email: adminEmail },
+    });
+    if (!existing) {
+      const passwordHash = await argon2.hash(bootstrapPassword, {
+        type: argon2.argon2id,
+      });
+      await prisma.adminUser.create({
+        data: {
+          email: adminEmail,
+          passwordHash,
+          passwordChangedAt: new Date(),
+        },
+      });
+      console.log(`Admin user seeded for ${adminEmail} (password hashed).`);
+    } else {
+      console.log(`Admin user already exists for ${adminEmail}; skipping bootstrap.`);
+    }
+  } else {
+    console.warn(
+      "ADMIN_EMAIL / ADMIN_BOOTSTRAP_PASSWORD not set — skipped AdminUser seed.",
+    );
+  }
+
+  console.log("Seed complete: SiteSettings, FeaturedTiles, Products, AdminUser.");
 }
 
 main()

@@ -11,10 +11,9 @@ function clientKey(request: Request): string {
 function assertSameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
-  if (!origin || !host) return true; // non-browser / same-origin navigations
+  if (!origin || !host) return true;
   try {
-    const originHost = new URL(origin).host;
-    return originHost === host;
+    return new URL(origin).host === host;
   } catch {
     return false;
   }
@@ -53,7 +52,30 @@ export async function POST(request: Request) {
     );
   }
 
-  // Persistence hook: wire to your ESP / DB here. Never log full PII in production.
+  // Prefer Express + Mailgun when API URL is configured
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  if (apiUrl) {
+    try {
+      const upstream = await fetch(`${apiUrl}/newsletter`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(request.headers.get("origin")
+            ? { Origin: request.headers.get("origin")! }
+            : {}),
+        },
+        body: JSON.stringify({ email: parsed.data.email }),
+      });
+      const data = await upstream.json().catch(() => ({}));
+      return NextResponse.json(data, { status: upstream.status });
+    } catch {
+      return NextResponse.json(
+        { error: "Newsletter service unavailable" },
+        { status: 502 },
+      );
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     message: "Thanks for subscribing.",

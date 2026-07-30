@@ -1,118 +1,140 @@
 # Al Athaq Boutique
 
-Production-grade marketing + catalog site for **Al Athaq Boutique** — a heritage-modern gift boutique specializing in incense/bakhoor and Middle Eastern gifts.
+Production-minded marketing + catalog site for **Al Athaq Boutique** — heritage-modern gifts (bakhoor, lanterns, textiles, jewelry).
 
 **Tagline:** *Tradition you can carry home.*
 
 ## Stack
 
-- **Next.js 14** (App Router) + React Server Components
-- **TypeScript** (strict)
-- **PostgreSQL** + **Prisma ORM**
+- **Next.js 14** (App Router) — storefront + admin UI at `/my-access-nimda`
+- **Express API** (`apps/api`) — auth + product CRUD + Mailgun
+- **PostgreSQL on Neon** via **Prisma** (shared schema)
 - **Tailwind CSS** (brand tokens)
-- Deployable on **Replit** (secrets via environment variables)
+- Deploy: **Vercel** (Next) + **Railway / Render / Fly** (Express)
 
 ## Quick start
 
 ```bash
 npm install
-cp .env.example .env   # then set DATABASE_URL
-npm run dev
+cp .env.example .env   # fill Neon + JWT + admin bootstrap + API URL
+npm run db:setup       # migrate + seed (including hashed AdminUser)
+npm run dev            # Next on :3000
+npm run dev:api        # Express on :4000 (second terminal)
 ```
 
-The homepage **always renders** on first `npm run dev`, even without a live database or uploaded assets — using brand radial-gradient + diamond-motif placeholders. When Postgres is configured and seeded, content is loaded from the DB (ISR, 60s).
+Homepage settings/featured can fall back to in-code defaults if the DB is unreachable. **Products never use hardcoded catalog fallbacks** — empty state is shown until Neon has products.
 
-### Database setup
+### Neon setup
 
-1. Create a PostgreSQL database (local, Replit, Neon, Supabase, etc.).
-2. Set secrets in `.env` (never commit them):
-
-```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?schema=public"
-NEXT_PUBLIC_SITE_URL="http://localhost:3000"
-```
-
-3. Apply migrations and seed:
+1. Create a project at [console.neon.tech](https://console.neon.tech).
+2. Copy the connection string into `DATABASE_URL` (add `?sslmode=require` if missing).
+3. Use the same `DATABASE_URL` for Next and Express.
+4. Run:
 
 ```bash
 npx prisma migrate deploy
 npx prisma db seed
-# or: npm run db:setup
 ```
 
-### Where to drop uploaded assets
+### Admin bootstrap (login only — no signup)
 
-Place media files in **`/public/assets`** using these basenames (any popular web format works):
+Set in `.env` (seed hashes the bootstrap password with argon2; API never compares plaintext):
 
-| Slot | Default filename | Also accepts |
-|------|------------------|--------------|
-| Hero background | `hero-bg.png` | `.jpg`, `.webp`, `.gif`, `.avif`, `.svg`, `.mp4`, `.webm`, … |
-| Products 1–7 | `product-1` … `product-7` (+ extension) | same |
-| Our Story photo | `us.png` | same |
-| Our Story background | `our-story-bg.png` | same |
+```env
+ADMIN_EMAIL="adnan.akhonbay@gmail.com"
+ADMIN_BOOTSTRAP_PASSWORD="alathaqboutique@1234"
+PASSWORD_MAX_AGE_DAYS=5
+JWT_SECRET="long-random-secret"
+```
 
-Examples that all work without code changes:
+- Seed creates `AdminUser` only if that email does not already exist.
+- Passwords expire every **5 days**; change via `POST /auth/change-password` or the control panel.
+- Login UI labels show the bootstrap email/password for **initial access only**. After you rotate the password, keep using your new password (labels may still show bootstrap values for convenience — they are not auth secrets).
 
-- `public/assets/hero-bg.mp4`
-- `public/assets/product-3.webp`
-- `public/assets/us.svg`
-- `public/assets/our-story-bg.jpg`
+Control panel: **http://localhost:3000/my-access-nimda**
 
-The shared `<Media>` component detects type by extension and renders `<video>`, Next.js `<Image>`, or `<img>` for SVG. Missing files fall back to brand placeholders.
+### Express API
+
+| Method | Path | Notes |
+|--------|------|--------|
+| POST | `/auth/login` | Cookie + JWT; may return `PASSWORD_EXPIRED` |
+| POST | `/auth/logout` | Clears session cookie |
+| GET | `/auth/me` | Expiry status / days remaining |
+| POST | `/auth/change-password` | Auth required; updates hash + `passwordChangedAt` |
+| GET/POST/PATCH/DELETE | `/products` | Auth + fresh password required |
+| POST | `/newsletter` | Mailgun notify when configured |
+
+CORS allows `FRONTEND_URL` only. Login is rate-limited.
+
+### Mailgun
+
+On the Express host set:
+
+```env
+MAILGUN_API_KEY=...
+MAILGUN_DOMAIN=mg.example.com
+MAILGUN_FROM="Al Athaq Boutique <noreply@mg.example.com>"
+```
+
+Add Mailgun DNS (SPF/DKIM) in your DNS provider. Used for login notification, password-changed confirmation, and newsletter signups (Next `/api/newsletter` proxies to the API when `NEXT_PUBLIC_API_URL` is set).
+
+### Env reference
+
+See `.env.example`. Important keys:
+
+| App | Variable |
+|-----|----------|
+| Both | `DATABASE_URL` |
+| Next | `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`, `REVALIDATE_SECRET` |
+| API | `JWT_SECRET`, `FRONTEND_URL`, `ADMIN_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD`, `PASSWORD_MAX_AGE_DAYS`, `MAILGUN_*`, `NEXT_REVALIDATE_URL`, `REVALIDATE_SECRET` |
+
+Never commit `.env` or production secrets.
+
+### Deploy
+
+**Next (Vercel)**  
+- Root directory: repo root  
+- Env: `DATABASE_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL` (public API URL), `REVALIDATE_SECRET`  
+- Build: `npm run build`
+
+**Express (Railway / Render / Fly)**  
+- Root / start: `apps/api` — `npm run build && npm start` (or workspace: `npm run build:api && npm run start:api`)  
+- Env: `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` (Vercel URL), Mailgun, `PASSWORD_MAX_AGE_DAYS`, optional revalidate URL/secret  
+- Ensure Prisma client is generated (`prisma generate` from repo root in build)
+
+### Assets
+
+Place media in `public/assets/` (`hero-bg`, `product-*`, `us`, `our-story-bg`, …).
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Local development |
-| `npm run build` | Generate Prisma client + production build |
-| `npm start` | Start production server |
-| `npm run db:migrate` | Apply migrations (`prisma migrate deploy`) |
-| `npm run db:seed` | Seed SiteSettings, FeaturedTiles, Products |
+| `npm run dev` | Next storefront + admin UI |
+| `npm run dev:api` | Express API |
+| `npm run build` / `start` | Next production |
+| `npm run build:api` / `start:api` | API production |
+| `npm run db:setup` | Migrate + seed |
 | `npm run lint` | ESLint |
 
 ## Project structure
 
 ```
-prisma/
-  schema.prisma          # SiteSettings, FeaturedTile, Product
-  seed.ts
-  migrations/
-public/                  # Static root
-  assets/                # Drop hero-bg, product-*, us, our-story-bg here
-src/
-  app/                   # App Router pages, sitemap, robots, API
-  components/            # Nav, Hero, Featured, OurStory, Products, Footer, Media
-  lib/                   # prisma, data, media resolution, zod, rate-limit
+apps/api/                # Express auth + product CRUD + Mailgun
+prisma/                  # Shared schema (SiteSettings, Featured, Product, AdminUser)
+src/app/                 # Storefront + /my-access-nimda
+src/app/api/newsletter   # Proxies to Express when configured
+src/app/api/revalidate   # On-demand ISR for homepage
 ```
 
 ## Brand
 
-- **Fonts:** Marcellus (display) + Work Sans (UI) via `next/font/google`
-- **Colors:** Athaq Purple `#6C3FA4`, Souk Teal `#178C86`, Lapis `#2E6BE6`, Warm Cream `#FBF5EC`, Ink `#2A2320`
-- **Motif:** rotated-square diamonds + dotted geometric tiles
-- **Buttons / nav:** super-rounded pills
+- **Fonts:** Marcellus + Work Sans  
+- **Colors:** Athaq Purple `#6C3FA4`, Souk Teal `#178C86`, Warm Cream `#FBF5EC`, Ink `#2A2320`
 
 ## SEO & security
 
-- Metadata API (title, description, Open Graph, Twitter)
-- JSON-LD: Organization, Store/LocalBusiness, Product ItemList
-- `app/sitemap.ts` + `app/robots.ts`
-- Security headers in `next.config.mjs` (CSP, HSTS, frame deny, nosniff, Referrer-Policy, Permissions-Policy)
-- Zod validation + in-memory rate limit + same-origin check on `/api/newsletter`
-- Secrets only via env vars; Prisma parameterized queries only
-
-## Replit
-
-1. Import the repo / upload the project.
-2. Add Secrets: `DATABASE_URL`, `NEXT_PUBLIC_SITE_URL` (your Replit URL).
-3. Provision Postgres (Replit DB / external).
-4. Run `npm install`, `npm run db:setup`, then `npm run dev` (or configure the Run button for `npm run build && npm start`).
-5. Upload media into `public/assets/`.
-
-## Notes
-
-- Client JS is limited to Nav (scroll + mobile drawer), Hero entrance, and Featured hover/tap.
-- Videos use `preload="metadata"`, muted + loop + playsInline; hero may autoplay.
-- `prefers-reduced-motion` is respected for animations.
-- Without `DATABASE_URL` or if the DB is unreachable, the site serves the same seed content from the in-code defaults layer so marketing pages never go blank.
+- Admin routes: `noindex` metadata + `robots.txt` disallow `/my-access-nimda`
+- Auth: argon2 password hashes, JWT httpOnly cookie (+ Bearer fallback), 5-day rotation
+- Rate-limited login; CORS locked to frontend origin(s)
+- Security headers in `next.config.mjs`

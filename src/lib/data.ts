@@ -70,7 +70,9 @@ async function fetchFromDatabase(): Promise<HomepageData | null> {
       prisma.product.findMany({ orderBy: { sortOrder: "asc" } }),
     ]);
 
-    if (!settings || featured.length === 0 || products.length === 0) {
+    // Settings + featured still required for a coherent homepage.
+    // Products are DB-only: empty catalog is valid (no hardcoded fallbacks).
+    if (!settings || featured.length === 0) {
       return null;
     }
 

@@ -118,7 +118,7 @@ export function LanguageSwitcher({
           id={listId}
           role="listbox"
           aria-label={dict.nav.language}
-          className="overflow-hidden rounded-3xl border border-athaq-teal/25 bg-athaq-teal/65 shadow-[0_24px_60px_rgba(23,140,134,0.18)] backdrop-blur-xl"
+          className="overflow-hidden rounded-3xl border border-athaq-teal/25 bg-athaq-teal/85 shadow-[0_24px_60px_rgba(23,140,134,0.18)] backdrop-blur-xl"
         >
           <div className="relative border-b border-white/20 px-4 py-3">
             <div

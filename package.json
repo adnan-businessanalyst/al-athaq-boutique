@@ -2,10 +2,16 @@
   "name": "al-athaq-boutique",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "dev": "next dev",
+    "dev:api": "npm run dev -w @al-athaq/api",
     "build": "prisma generate && next build",
+    "build:api": "npm run build -w @al-athaq/api",
     "start": "next start",
+    "start:api": "npm run start -w @al-athaq/api",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
@@ -19,6 +25,7 @@
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
+    "argon2": "^0.45.1",
     "isomorphic-dompurify": "^3.19.0",
     "next": "14.2.35",
     "react": "^18",
@@ -26,6 +33,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/argon2": "^0.14.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

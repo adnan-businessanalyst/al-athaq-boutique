@@ -8,6 +8,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: ["/my-access-nimda", "/my-access-nimda/"],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   };

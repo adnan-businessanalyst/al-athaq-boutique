@@ -39,48 +39,54 @@ export function Products({ products }: ProductsProps) {
           </p>
         </div>
 
-        <ul className="grid grid-cols-1 gap-6 min-[420px]:grid-cols-2 lg:grid-cols-4 lg:gap-7">
-          {products.map((product) => {
-            const copy = dict.products.items[product.slug] ?? {
-              name: product.name,
-              description: product.description,
-              category: product.category,
-            };
-            return (
-              <li key={product.id}>
-                <article className="group flex h-full flex-col">
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-athaq-purple/5">
-                    <Media
-                      src={product.media.mediaUrl}
-                      alt={product.media.alt}
-                      mediaType={product.media.mediaType}
-                      posterUrl={product.media.posterUrl}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="absolute inset-0"
-                      imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                    />
-                    <DiamondMotif
-                      size={36}
-                      tone="light"
-                      className="pointer-events-none absolute end-3 top-3 opacity-80"
-                    />
-                    <span className="absolute start-3 top-3 rounded-pill bg-athaq-cream/90 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-athaq-ink backdrop-blur-sm">
-                      {copy.category}
-                    </span>
-                  </div>
-                  <div className="mt-4 flex flex-1 flex-col">
-                    <h3 className="font-display text-xl text-athaq-ink">
-                      {copy.name}
-                    </h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-athaq-ink/70">
-                      {copy.description}
-                    </p>
-                  </div>
-                </article>
-              </li>
-            );
-          })}
-        </ul>
+        {products.length === 0 ? (
+          <p className="rounded-3xl border border-athaq-ink/10 bg-white/40 px-6 py-10 text-athaq-ink/70">
+            The collection is being curated. Check back soon.
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-6 min-[420px]:grid-cols-2 lg:grid-cols-4 lg:gap-7">
+            {products.map((product) => {
+              const copy = dict.products.items[product.slug] ?? {
+                name: product.name,
+                description: product.description,
+                category: product.category,
+              };
+              return (
+                <li key={product.id}>
+                  <article className="group flex h-full flex-col">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-athaq-purple/5">
+                      <Media
+                        src={product.media.mediaUrl}
+                        alt={product.media.alt}
+                        mediaType={product.media.mediaType}
+                        posterUrl={product.media.posterUrl}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="absolute inset-0"
+                        imgClassName="object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                      />
+                      <DiamondMotif
+                        size={36}
+                        tone="light"
+                        className="pointer-events-none absolute end-3 top-3 opacity-80"
+                      />
+                      <span className="absolute start-3 top-3 rounded-pill bg-athaq-cream/90 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-athaq-ink backdrop-blur-sm">
+                        {copy.category}
+                      </span>
+                    </div>
+                    <div className="mt-4 flex flex-1 flex-col">
+                      <h3 className="font-display text-xl text-athaq-ink">
+                        {copy.name}
+                      </h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-athaq-ink/70">
+                        {copy.description}
+                      </p>
+                    </div>
+                  </article>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </section>
   );
