@@ -114,23 +114,26 @@ async function fetchFromDatabase(): Promise<HomepageData | null> {
       ),
     };
 
-    const featuredContent: FeaturedContent[] = featured
-      .filter((row) => isFeaturedSlot(row.position))
-      .map((row) => ({
-        id: row.id,
-        position: row.position,
-        productId: row.productId,
-        slug: row.product.slug,
-        name: row.product.name,
-        category: row.product.category,
-        media: toMedia(
-          row.product.mediaUrl,
-          row.product.mediaType,
-          row.product.alt,
-          row.product.posterUrl,
-        ),
-        link: `#products`,
-      }));
+    const featuredContent: FeaturedContent[] = featured.flatMap((row) => {
+      if (!isFeaturedSlot(row.position)) return [];
+      return [
+        {
+          id: row.id,
+          position: row.position,
+          productId: row.productId,
+          slug: row.product.slug,
+          name: row.product.name,
+          category: row.product.category,
+          media: toMedia(
+            row.product.mediaUrl,
+            row.product.mediaType,
+            row.product.alt,
+            row.product.posterUrl,
+          ),
+          link: `#products`,
+        },
+      ];
+    });
 
     const productContent: ProductContent[] = products.map((p) => ({
       id: p.id,
