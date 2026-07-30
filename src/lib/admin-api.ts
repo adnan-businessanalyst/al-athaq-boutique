@@ -1,7 +1,20 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(
-  /\/$/,
-  "",
-);
+/**
+ * Normalize NEXT_PUBLIC_API_URL.
+ * Bare hosts like "my-api.up.railway.app" must get https:// or the browser
+ * treats them as a path on the current site (404).
+ */
+function normalizeApiUrl(raw: string | undefined): string {
+  const fallback = "http://localhost:4000";
+  const value = (raw || fallback).trim().replace(/\/$/, "");
+  const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  try {
+    return new URL(withProtocol).origin;
+  } catch {
+    return fallback;
+  }
+}
+
+const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
 
 export type AdminMe = {
   admin: { id: string; email: string };

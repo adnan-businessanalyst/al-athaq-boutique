@@ -1,13 +1,20 @@
 /** @type {import('next').NextConfig} */
 
-function apiConnectSrc() {
-  const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+function normalizeApiOrigin(raw) {
+  const fallback = "http://localhost:4000";
+  const value = String(raw || fallback)
+    .trim()
+    .replace(/\/$/, "");
+  const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`;
   try {
-    const url = new URL(raw);
-    return `${url.protocol}//${url.host}`;
+    return new URL(withProtocol).origin;
   } catch {
-    return "http://localhost:4000";
+    return fallback;
   }
+}
+
+function apiConnectSrc() {
+  return normalizeApiOrigin(process.env.NEXT_PUBLIC_API_URL);
 }
 
 const isProd = process.env.NODE_ENV === "production";
