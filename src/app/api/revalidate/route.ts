@@ -4,7 +4,15 @@ import { revalidatePath } from "next/cache";
 /**
  * On-demand ISR revalidation triggered by the Express API after product mutations.
  * Protect with REVALIDATE_SECRET (shared with the API).
+ * Browser GET is not used for revalidation — only POST with the shared secret.
  */
+export async function GET() {
+  return NextResponse.json({
+    ok: true,
+    message: "Use POST with x-revalidate-secret (or JSON secret) to revalidate.",
+  });
+}
+
 export async function POST(request: Request) {
   const secret = process.env.REVALIDATE_SECRET;
   if (!secret) {
