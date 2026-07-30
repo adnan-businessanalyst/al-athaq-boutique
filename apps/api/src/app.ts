@@ -30,7 +30,7 @@ function allowedOrigins(): string[] {
     }
   }
 
-  return [...new Set([...configured, ...extras])];
+  return Array.from(new Set(configured.concat(extras)));
 }
 
 export function createApp() {
