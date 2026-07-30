@@ -4,17 +4,17 @@ import Link from "next/link";
 import { useState } from "react";
 import { Media } from "@/components/Media";
 import { useLanguage } from "@/components/LanguageProvider";
-import type { FeaturedTileContent } from "@/types";
+import type { FeaturedContent, FeaturedSlot } from "@/types";
 
 type FeaturedProps = {
-  tiles: FeaturedTileContent[];
+  tiles: FeaturedContent[];
 };
 
-const positionClass: Record<FeaturedTileContent["position"], string> = {
-  LARGE: "md:col-span-1 md:row-span-2 min-h-[320px] md:min-h-[520px]",
-  WIDE: "md:col-span-2 min-h-[220px] md:min-h-[250px]",
-  SMALL_A: "min-h-[220px] md:min-h-[250px]",
-  SMALL_B: "min-h-[220px] md:min-h-[250px]",
+const positionClass: Record<FeaturedSlot, string> = {
+  1: "md:col-span-1 md:row-span-2 min-h-[320px] md:min-h-[520px]",
+  2: "md:col-span-2 min-h-[220px] md:min-h-[250px]",
+  3: "min-h-[220px] md:min-h-[250px]",
+  4: "min-h-[220px] md:min-h-[250px]",
 };
 
 function Tile({
@@ -23,7 +23,7 @@ function Tile({
   title,
   viewLabel,
 }: {
-  tile: FeaturedTileContent;
+  tile: FeaturedContent;
   tag: string;
   title: string;
   viewLabel: string;
@@ -88,10 +88,10 @@ function Tile({
 
 export function Featured({ tiles }: FeaturedProps) {
   const { dict } = useLanguage();
-  const ordered = ["LARGE", "WIDE", "SMALL_A", "SMALL_B"] as const;
+  const ordered: FeaturedSlot[] = [1, 2, 3, 4];
   const byPos = Object.fromEntries(tiles.map((t) => [t.position, t])) as Record<
-    FeaturedTileContent["position"],
-    FeaturedTileContent | undefined
+    FeaturedSlot,
+    FeaturedContent | undefined
   >;
 
   return (
@@ -117,25 +117,32 @@ export function Featured({ tiles }: FeaturedProps) {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:grid-rows-2 md:gap-5 md:auto-rows-[minmax(240px,1fr)]">
-          {ordered.map((pos) => {
-            const tile = byPos[pos];
-            if (!tile) return null;
-            const copy = dict.featured.tiles[pos] ?? {
-              tag: tile.tag,
-              title: tile.title,
-            };
-            return (
-              <Tile
-                key={tile.id}
-                tile={tile}
-                tag={copy.tag}
-                title={copy.title}
-                viewLabel={dict.featured.view}
-              />
-            );
-          })}
-        </div>
+        {tiles.length === 0 ? (
+          <p className="rounded-3xl border border-athaq-ink/10 bg-white/40 px-6 py-10 text-athaq-ink/70">
+            Featured pieces will appear here once products are tagged in slots
+            1–4.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:grid-rows-2 md:gap-5 md:auto-rows-[minmax(240px,1fr)]">
+            {ordered.map((pos) => {
+              const tile = byPos[pos];
+              if (!tile) return null;
+              const copy = dict.products.items[tile.slug] ?? {
+                name: tile.name,
+                category: tile.category,
+              };
+              return (
+                <Tile
+                  key={tile.id}
+                  tile={tile}
+                  tag={copy.category}
+                  title={copy.name}
+                  viewLabel={dict.featured.view}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

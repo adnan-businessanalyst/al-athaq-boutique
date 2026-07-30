@@ -1,6 +1,7 @@
 export type MediaKind = "image" | "video" | "svg";
 
-export type FeaturedPosition = "LARGE" | "WIDE" | "SMALL_A" | "SMALL_B";
+/** Featured slot tags on the homepage bento: 1 large, 2 wide, 3–4 small */
+export type FeaturedSlot = 1 | 2 | 3 | 4;
 
 export interface MediaAsset {
   mediaUrl: string | null;
@@ -28,14 +29,15 @@ export interface SiteContent {
   storyBg: MediaAsset;
 }
 
-export interface FeaturedTileContent {
+export interface FeaturedContent {
   id: string;
-  position: FeaturedPosition;
-  tag: string;
-  title: string;
+  position: FeaturedSlot;
+  productId: string;
+  slug: string;
+  name: string;
+  category: string;
   media: MediaAsset;
   link: string;
-  sortOrder: number;
 }
 
 export interface ProductContent {
@@ -50,7 +52,7 @@ export interface ProductContent {
 
 export interface HomepageData {
   settings: SiteContent;
-  featured: FeaturedTileContent[];
+  featured: FeaturedContent[];
   products: ProductContent[];
   fromDatabase: boolean;
 }

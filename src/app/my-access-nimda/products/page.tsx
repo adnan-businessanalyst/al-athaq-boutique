@@ -8,6 +8,7 @@ import {
   apiFetch,
   setStoredToken,
   type AdminMe,
+  type ApiFeatured,
   type ApiProduct,
 } from "@/lib/admin-api";
 
@@ -23,15 +24,31 @@ const emptyForm = {
   sortOrder: 0,
 };
 
+const SLOT_LABELS: Record<number, string> = {
+  1: "Slot 1 — large",
+  2: "Slot 2 — wide",
+  3: "Slot 3 — small",
+  4: "Slot 4 — small",
+};
+
 export default function AdminProductsPage() {
   const router = useRouter();
   const [me, setMe] = useState<AdminMe | null>(null);
   const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [featured, setFeatured] = useState<ApiFeatured[]>([]);
+  const [slotDrafts, setSlotDrafts] = useState<Record<number, string>>({
+    1: "",
+    2: "",
+    3: "",
+    4: "",
+  });
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [featuredError, setFeaturedError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingFeatured, setSavingFeatured] = useState(false);
 
   const load = useCallback(async () => {
     const profile = await apiFetch<AdminMe>("/auth/me");
@@ -40,8 +57,17 @@ export default function AdminProductsPage() {
       return;
     }
     setMe(profile);
-    const list = await apiFetch<{ products: ApiProduct[] }>("/products");
+    const [list, feat] = await Promise.all([
+      apiFetch<{ products: ApiProduct[] }>("/products"),
+      apiFetch<{ featured: ApiFeatured[] }>("/featured"),
+    ]);
     setProducts(list.products);
+    setFeatured(feat.featured);
+    const drafts: Record<number, string> = { 1: "", 2: "", 3: "", 4: "" };
+    for (const row of feat.featured) {
+      drafts[row.position] = row.productId;
+    }
+    setSlotDrafts(drafts);
     setLoading(false);
   }, [router]);
 
@@ -123,6 +149,40 @@ export default function AdminProductsPage() {
     router.replace("/my-access-nimda");
   }
 
+  async function saveFeaturedSlots() {
+    setSavingFeatured(true);
+    setFeaturedError(null);
+    try {
+      for (const position of [1, 2, 3, 4] as const) {
+        const productId = slotDrafts[position]?.trim();
+        const current = featured.find((f) => f.position === position);
+        if (!productId) {
+          if (current) {
+            await apiFetch(`/featured/${position}`, { method: "DELETE" });
+          }
+          continue;
+        }
+        if (current?.productId === productId) continue;
+        await apiFetch(`/featured/${position}`, {
+          method: "PUT",
+          body: { productId },
+        });
+      }
+      const feat = await apiFetch<{ featured: ApiFeatured[] }>("/featured");
+      setFeatured(feat.featured);
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "PASSWORD_EXPIRED") {
+        router.replace("/my-access-nimda/change-password");
+        return;
+      }
+      setFeaturedError(
+        err instanceof ApiError ? err.message : "Failed to save featured slots",
+      );
+    } finally {
+      setSavingFeatured(false);
+    }
+  }
+
   if (loading || !me) {
     return (
       <main className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-5">
@@ -159,6 +219,51 @@ export default function AdminProductsPage() {
           </button>
         </div>
       </header>
+
+      <section className="mb-10 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+        <h2 className="font-display text-2xl">Featured (slots 1–4)</h2>
+        <p className="mt-2 text-sm text-athaq-cream/70">
+          Tag up to four products for the homepage featured bento. Leave a slot
+          empty to clear it.
+        </p>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          {[1, 2, 3, 4].map((position) => (
+            <div key={position}>
+              <label className="mb-1 block text-sm" htmlFor={`slot-${position}`}>
+                {SLOT_LABELS[position]}
+              </label>
+              <select
+                id={`slot-${position}`}
+                value={slotDrafts[position] || ""}
+                onChange={(e) =>
+                  setSlotDrafts((d) => ({ ...d, [position]: e.target.value }))
+                }
+                className="min-h-11 w-full rounded-2xl border border-white/15 bg-black/20 px-3 outline-none focus:ring-2 focus:ring-athaq-teal"
+              >
+                <option value="">— empty —</option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </div>
+        {featuredError ? (
+          <p className="mt-4 rounded-2xl bg-red-500/15 px-4 py-3 text-sm text-red-200">
+            {featuredError}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          disabled={savingFeatured}
+          onClick={saveFeaturedSlots}
+          className="mt-5 rounded-pill bg-athaq-teal px-6 py-2.5 font-semibold text-white disabled:opacity-60"
+        >
+          {savingFeatured ? "Saving slots…" : "Save featured slots"}
+        </button>
+      </section>
 
       <section className="mb-10 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
         <h2 className="font-display text-2xl">

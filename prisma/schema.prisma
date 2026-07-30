@@ -16,13 +16,6 @@ enum MediaType {
   svg
 }
 
-enum FeaturedPosition {
-  LARGE
-  WIDE
-  SMALL_A
-  SMALL_B
-}
-
 model SiteSettings {
   id String @id @default("default")
 
@@ -55,35 +48,33 @@ model SiteSettings {
   updatedAt DateTime @updatedAt
 }
 
-model FeaturedTile {
-  id       String           @id @default(cuid())
-  position FeaturedPosition @unique
-  tag      String
-  title    String
-  mediaUrl String
-  mediaType MediaType       @default(image)
-  posterUrl String?
-  alt      String
-  link     String
-  sortOrder Int             @default(0)
+/// Featured homepage slots — up to 4 tagged products (position 1–4).
+model Featured {
+  id        String   @id @default(cuid())
+  /// Slot tag: 1 (large), 2 (wide), 3 (small A), 4 (small B)
+  position  Int      @unique
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([sortOrder])
+  @@index([productId])
+  @@index([position])
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  slug        String    @unique
+  id          String     @id @default(cuid())
+  slug        String     @unique
   name        String
   description String
   category    String
   mediaUrl    String
-  mediaType   MediaType @default(image)
+  mediaType   MediaType  @default(image)
   posterUrl   String?
   alt         String
-  sortOrder   Int       @default(0)
+  sortOrder   Int        @default(0)
+  featured    Featured[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

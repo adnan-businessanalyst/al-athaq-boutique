@@ -1,4 +1,4 @@
-import { PrismaClient, MediaType, FeaturedPosition } from "@prisma/client";
+import { PrismaClient, MediaType } from "@prisma/client";
 import { existsSync } from "fs";
 import path from "path";
 import argon2 from "argon2";
@@ -85,67 +85,6 @@ async function main() {
     },
   });
 
-  const featured = [
-    {
-      position: FeaturedPosition.LARGE,
-      tag: "Bakhoor",
-      title: "Signature incense blends",
-      basename: "product-1",
-      link: "#products",
-      sortOrder: 0,
-    },
-    {
-      position: FeaturedPosition.WIDE,
-      tag: "Lanterns",
-      title: "Light for evening rituals",
-      basename: "product-2",
-      link: "#products",
-      sortOrder: 1,
-    },
-    {
-      position: FeaturedPosition.SMALL_A,
-      tag: "Textiles",
-      title: "Soft heritage weaves",
-      basename: "product-3",
-      link: "#products",
-      sortOrder: 2,
-    },
-    {
-      position: FeaturedPosition.SMALL_B,
-      tag: "Jewelry",
-      title: "Pieces with quiet meaning",
-      basename: "product-4",
-      link: "#products",
-      sortOrder: 3,
-    },
-  ];
-
-  for (const tile of featured) {
-    const media = resolveSeedMedia(tile.basename);
-    await prisma.featuredTile.upsert({
-      where: { position: tile.position },
-      create: {
-        position: tile.position,
-        tag: tile.tag,
-        title: tile.title,
-        mediaUrl: media.mediaUrl,
-        mediaType: media.mediaType,
-        alt: tile.basename,
-        link: tile.link,
-        sortOrder: tile.sortOrder,
-      },
-      update: {
-        tag: tile.tag,
-        title: tile.title,
-        mediaUrl: media.mediaUrl,
-        mediaType: media.mediaType,
-        alt: tile.basename,
-        link: tile.link,
-        sortOrder: tile.sortOrder,
-      },
-    });
-  }
-
   const products = [
     {
       slug: "royal-oud-bakhoor",
@@ -205,9 +144,11 @@ async function main() {
     },
   ];
 
+  const seededProductIds: string[] = [];
+
   for (const p of products) {
     const media = resolveSeedMedia(p.basename);
-    await prisma.product.upsert({
+    const row = await prisma.product.upsert({
       where: { slug: p.slug },
       create: {
         slug: p.slug,
@@ -228,6 +169,18 @@ async function main() {
         alt: p.basename,
         sortOrder: p.sortOrder,
       },
+    });
+    seededProductIds.push(row.id);
+  }
+
+  // Featured slots 1–4 point at the first four products
+  for (let position = 1; position <= 4; position++) {
+    const productId = seededProductIds[position - 1];
+    if (!productId) break;
+    await prisma.featured.upsert({
+      where: { position },
+      create: { position, productId },
+      update: { productId },
     });
   }
 
@@ -259,7 +212,7 @@ async function main() {
     );
   }
 
-  console.log("Seed complete: SiteSettings, FeaturedTiles, Products, AdminUser.");
+  console.log("Seed complete: SiteSettings, Products, Featured, AdminUser.");
 }
 
 main()

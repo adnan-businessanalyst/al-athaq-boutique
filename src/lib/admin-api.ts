@@ -38,6 +38,15 @@ export type ApiProduct = {
   updatedAt: string;
 };
 
+export type ApiFeatured = {
+  id: string;
+  position: number;
+  productId: string;
+  product: ApiProduct;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type ApiOptions = {
   method?: string;
   body?: unknown;

@@ -1,5 +1,5 @@
 import type {
-  FeaturedTileContent,
+  FeaturedContent,
   HomepageData,
   MediaAsset,
   ProductContent,
@@ -47,58 +47,9 @@ export function buildDefaultSettings(): SiteContent {
   };
 }
 
-export function buildDefaultFeatured(): FeaturedTileContent[] {
-  const tiles: Array<{
-    position: FeaturedTileContent["position"];
-    tag: string;
-    title: string;
-    basename: string;
-    link: string;
-    sortOrder: number;
-  }> = [
-    {
-      position: "LARGE",
-      tag: "Bakhoor",
-      title: "Signature incense blends",
-      basename: "product-1",
-      link: "#products",
-      sortOrder: 0,
-    },
-    {
-      position: "WIDE",
-      tag: "Lanterns",
-      title: "Light for evening rituals",
-      basename: "product-2",
-      link: "#products",
-      sortOrder: 1,
-    },
-    {
-      position: "SMALL_A",
-      tag: "Textiles",
-      title: "Soft heritage weaves",
-      basename: "product-3",
-      link: "#products",
-      sortOrder: 2,
-    },
-    {
-      position: "SMALL_B",
-      tag: "Jewelry",
-      title: "Pieces with quiet meaning",
-      basename: "product-4",
-      link: "#products",
-      sortOrder: 3,
-    },
-  ];
-
-  return tiles.map((t) => ({
-    id: `featured-${t.position.toLowerCase()}`,
-    position: t.position,
-    tag: t.tag,
-    title: t.title,
-    media: asset(t.basename),
-    link: t.link,
-    sortOrder: t.sortOrder,
-  }));
+/** Featured tiles come from DB product slots — no hardcoded catalog. */
+export function buildDefaultFeatured(): FeaturedContent[] {
+  return [];
 }
 
 /** Products are database-driven only — never hardcode a live catalog. */
@@ -109,7 +60,7 @@ export function buildDefaultProducts(): ProductContent[] {
 export function buildDefaultHomepage(): HomepageData {
   return {
     settings: buildDefaultSettings(),
-    featured: buildDefaultFeatured(),
+    featured: [],
     products: [],
     fromDatabase: false,
   };

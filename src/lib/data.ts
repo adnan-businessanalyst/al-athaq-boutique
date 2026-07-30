@@ -2,7 +2,8 @@ import { buildDefaultHomepage } from "@/lib/defaults";
 import { mediaTypeFromUrl, resolveOrFallback } from "@/lib/media";
 import { prisma } from "@/lib/prisma";
 import type {
-  FeaturedTileContent,
+  FeaturedContent,
+  FeaturedSlot,
   HomepageData,
   MediaAsset,
   ProductContent,
@@ -19,7 +20,6 @@ function toMedia(
   let url = mediaUrl ?? null;
   let type = (mediaType as MediaAsset["mediaType"]) || "image";
 
-  // Prefer live public files when seeded URLs are missing on disk
   if (url) {
     const basename =
       url
@@ -33,7 +33,6 @@ function toMedia(
       url = resolved.mediaUrl;
       type = resolved.mediaType;
     } else if (!url.startsWith("http")) {
-      // Seeded path not present — fall back to placeholder
       url = null;
     } else {
       type = mediaTypeFromUrl(url);
@@ -55,9 +54,12 @@ function toMedia(
 function canUseDatabase(): boolean {
   const url = process.env.DATABASE_URL;
   if (!url) return false;
-  // Skip the committed example placeholder so first-run builds stay quiet
   if (url.includes("user:password@localhost")) return false;
   return true;
+}
+
+function isFeaturedSlot(n: number): n is FeaturedSlot {
+  return n === 1 || n === 2 || n === 3 || n === 4;
 }
 
 async function fetchFromDatabase(): Promise<HomepageData | null> {
@@ -66,15 +68,14 @@ async function fetchFromDatabase(): Promise<HomepageData | null> {
   try {
     const [settings, featured, products] = await Promise.all([
       prisma.siteSettings.findUnique({ where: { id: "default" } }),
-      prisma.featuredTile.findMany({ orderBy: { sortOrder: "asc" } }),
+      prisma.featured.findMany({
+        orderBy: { position: "asc" },
+        include: { product: true },
+      }),
       prisma.product.findMany({ orderBy: { sortOrder: "asc" } }),
     ]);
 
-    // Settings + featured still required for a coherent homepage.
-    // Products are DB-only: empty catalog is valid (no hardcoded fallbacks).
-    if (!settings || featured.length === 0) {
-      return null;
-    }
+    if (!settings) return null;
 
     const site: SiteContent = {
       tagline: settings.tagline,
@@ -113,20 +114,23 @@ async function fetchFromDatabase(): Promise<HomepageData | null> {
       ),
     };
 
-    const featuredContent: FeaturedTileContent[] = featured.map((tile) => ({
-      id: tile.id,
-      position: tile.position,
-      tag: tile.tag,
-      title: tile.title,
-      media: toMedia(
-        tile.mediaUrl,
-        tile.mediaType,
-        tile.alt,
-        tile.posterUrl,
-      ),
-      link: tile.link,
-      sortOrder: tile.sortOrder,
-    }));
+    const featuredContent: FeaturedContent[] = featured
+      .filter((row) => isFeaturedSlot(row.position))
+      .map((row) => ({
+        id: row.id,
+        position: row.position,
+        productId: row.productId,
+        slug: row.product.slug,
+        name: row.product.name,
+        category: row.product.category,
+        media: toMedia(
+          row.product.mediaUrl,
+          row.product.mediaType,
+          row.product.alt,
+          row.product.posterUrl,
+        ),
+        link: `#products`,
+      }));
 
     const productContent: ProductContent[] = products.map((p) => ({
       id: p.id,

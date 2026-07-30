@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { authRouter } from "./routes/auth";
 import { productsRouter } from "./routes/products";
+import { featuredRouter } from "./routes/featured";
 import { newsletterRouter } from "./routes/newsletter";
 import { apiRateLimit } from "./middleware/rateLimit";
 
@@ -59,6 +60,7 @@ export function createApp() {
 
   app.use("/auth", authRouter);
   app.use("/products", productsRouter);
+  app.use("/featured", featuredRouter);
   app.use("/newsletter", newsletterRouter);
 
   app.use(
