@@ -35,9 +35,21 @@ export const productUpdateSchema = productCreateSchema.partial();
 
 export const variantSchema = z.object({
   label: z.string().trim().min(1).max(120),
+  size: z.string().trim().max(80).nullable().optional(),
+  weightGrams: z.number().int().min(0).max(1_000_000).nullable().optional(),
   sku: z.string().trim().max(80).nullable().optional(),
   priceHalalas: z.number().int().min(0).max(100_000_000),
+  quantityAvailable: z.number().int().min(0).max(1_000_000).optional(),
   isDefault: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).max(100000).optional(),
+});
+
+export const shippingMethodSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  description: z.string().trim().max(2000).optional(),
+  feeHalalas: z.number().int().min(0).max(10_000_000),
+  etaLabel: z.string().trim().max(120).nullable().optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().min(0).max(100000).optional(),
 });
@@ -93,6 +105,8 @@ export const slotSchema = z.object({
 export const commerceSettingsSchema = z.object({
   purchasePolicy: z.string().trim().min(1).max(50000),
   deliveryInstructions: z.string().trim().min(1).max(50000),
+  shippingPolicy: z.string().trim().max(50000).optional(),
+  returnPolicy: z.string().trim().max(50000).optional(),
   orderPrefix: z.string().trim().min(1).max(12),
   shopWhatsAppE164: z.string().trim().max(30).nullable().optional(),
   currencyLabel: z.string().trim().min(1).max(8).default("SAR"),
@@ -126,6 +140,7 @@ export const createOrderSchema = z.object({
   }),
   zoneId: z.string().trim().min(1),
   slotId: z.string().trim().min(1),
+  shippingMethodId: z.string().trim().min(1),
   deliveryDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/),
   policyAccepted: z.literal(true),
   customerNotes: z.string().trim().max(1000).nullable().optional(),

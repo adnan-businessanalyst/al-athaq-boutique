@@ -43,7 +43,10 @@ export interface FeaturedContent {
 export interface ProductVariantContent {
   id: string;
   label: string;
+  size: string | null;
+  weightGrams: number | null;
   priceHalalas: number;
+  quantityAvailable: number;
   isDefault: boolean;
   isActive: boolean;
   sortOrder: number;

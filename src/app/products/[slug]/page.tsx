@@ -49,7 +49,10 @@ async function getProduct(slug: string): Promise<ProductContent | null> {
     const variants = p.variants.map((v) => ({
       id: v.id,
       label: v.label,
+      size: v.size,
+      weightGrams: v.weightGrams,
       priceHalalas: v.priceHalalas,
+      quantityAvailable: v.quantityAvailable,
       isDefault: v.isDefault,
       isActive: v.isActive,
       sortOrder: v.sortOrder,

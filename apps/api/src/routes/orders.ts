@@ -147,6 +147,16 @@ ordersRouter.post("/", optionalCustomer, async (req: CustomerAuthedRequest, res)
   }
 
   const byId = new Map(variants.map((v) => [v.id, v]));
+  for (const line of lineInputs) {
+    const v = byId.get(line.variantId)!;
+    if (line.quantity > v.quantityAvailable) {
+      return res.status(400).json({
+        error: `Not enough stock for ${v.product.name} (${v.label}). Available: ${v.quantityAvailable}.`,
+        code: "INSUFFICIENT_STOCK",
+      });
+    }
+  }
+
   let subtotalHalalas = 0;
   const orderItemsData = lineInputs.map((line) => {
     const v = byId.get(line.variantId)!;
@@ -165,7 +175,15 @@ ordersRouter.post("/", optionalCustomer, async (req: CustomerAuthedRequest, res)
     };
   });
 
-  const shippingFeeHalalas = zone.shippingFeeHalalas;
+  const shippingMethod = await prisma.shippingMethod.findFirst({
+    where: { id: body.shippingMethodId, isActive: true },
+  });
+  if (!shippingMethod) {
+    return res.status(400).json({ error: "Invalid or inactive shipping method" });
+  }
+
+  const shippingFeeHalalas =
+    shippingMethod.feeHalalas + zone.shippingFeeHalalas;
   const totalHalalas = subtotalHalalas + shippingFeeHalalas;
 
   const settings = await prisma.commerceSettings.upsert({
@@ -206,6 +224,19 @@ ordersRouter.post("/", optionalCustomer, async (req: CustomerAuthedRequest, res)
         },
       });
 
+      for (const line of lineInputs) {
+        const updated = await tx.productVariant.updateMany({
+          where: {
+            id: line.variantId,
+            quantityAvailable: { gte: line.quantity },
+          },
+          data: { quantityAvailable: { decrement: line.quantity } },
+        });
+        if (updated.count !== 1) {
+          throw new Error("INSUFFICIENT_STOCK");
+        }
+      }
+
       return tx.order.create({
         data: {
           confirmationNumber,
@@ -217,6 +248,8 @@ ordersRouter.post("/", optionalCustomer, async (req: CustomerAuthedRequest, res)
           isGuest,
           zoneId: zone.id,
           slotId: slot.id,
+          shippingMethodId: shippingMethod.id,
+          shippingMethodName: shippingMethod.name,
           deliveryDate,
           shippingFeeHalalas,
           subtotalHalalas,
@@ -234,6 +267,7 @@ ordersRouter.post("/", optionalCustomer, async (req: CustomerAuthedRequest, res)
           zone: true,
           slot: true,
           address: true,
+          shippingMethod: true,
         },
       });
     });
@@ -280,7 +314,14 @@ ordersRouter.post("/", optionalCustomer, async (req: CustomerAuthedRequest, res)
       },
     });
   } catch (err) {
-    console.error("[orders]", err instanceof Error ? err.message : err);
+    const message = err instanceof Error ? err.message : "Could not place order";
+    if (message === "INSUFFICIENT_STOCK") {
+      return res.status(400).json({
+        error: "Not enough stock for one or more items.",
+        code: "INSUFFICIENT_STOCK",
+      });
+    }
+    console.error("[orders]", message);
     return res.status(500).json({ error: "Could not place order" });
   }
 });

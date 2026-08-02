@@ -29,7 +29,17 @@ type Zone = {
 type CommerceSettings = {
   purchasePolicy: string;
   deliveryInstructions: string;
+  shippingPolicy: string;
+  returnPolicy: string;
   currencyLabel: string;
+};
+
+type ShippingMethod = {
+  id: string;
+  name: string;
+  description: string;
+  feeHalalas: number;
+  etaLabel: string | null;
 };
 
 export default function CheckoutPage() {
@@ -37,6 +47,8 @@ export default function CheckoutPage() {
   const cart = useCart();
   const [mode, setMode] = useState<"guest" | "account">("guest");
   const [settings, setSettings] = useState<CommerceSettings | null>(null);
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+  const [shippingMethodId, setShippingMethodId] = useState("");
   const [zones, setZones] = useState<Zone[]>([]);
   const [matchedZones, setMatchedZones] = useState<Zone[]>([]);
   const [customer, setCustomer] = useState<{
@@ -70,6 +82,12 @@ export default function CheckoutPage() {
     storeFetch<{ zones: Zone[] }>("/delivery/zones")
       .then((r) => setZones(r.zones))
       .catch(() => setZones([]));
+    storeFetch<{ methods: ShippingMethod[] }>("/catalog/shipping-methods")
+      .then((r) => {
+        setShippingMethods(r.methods);
+        if (r.methods[0]) setShippingMethodId(r.methods[0].id);
+      })
+      .catch(() => setShippingMethods([]));
     storeFetch<{ customer: typeof customer }>("/customer/me")
       .then((r) => {
         if (r.customer) {
@@ -92,7 +110,10 @@ export default function CheckoutPage() {
     [matchedZones, zoneId],
   );
 
-  const shipping = selectedZone?.shippingFeeHalalas ?? 0;
+  const selectedMethod =
+    shippingMethods.find((m) => m.id === shippingMethodId) ?? null;
+  const shipping =
+    (selectedMethod?.feeHalalas ?? 0) + (selectedZone?.shippingFeeHalalas ?? 0);
   const estTotal = cart.subtotalHalalas + shipping;
 
   async function validateLocation() {
@@ -180,8 +201,10 @@ export default function CheckoutPage() {
       setError("Please accept the purchase policy.");
       return;
     }
-    if (!zoneId || !slotId || !deliveryDate) {
-      setError("Select a verified zone, delivery date, and time slot.");
+    if (!zoneId || !slotId || !deliveryDate || !shippingMethodId) {
+      setError(
+        "Select a verified zone, shipping method, delivery date, and time slot.",
+      );
       return;
     }
     if (cart.lines.length === 0) {
@@ -209,6 +232,7 @@ export default function CheckoutPage() {
         },
         zoneId,
         slotId,
+        shippingMethodId,
         deliveryDate,
         policyAccepted: true as const,
         customerNotes: notes || null,
@@ -416,6 +440,22 @@ export default function CheckoutPage() {
                     </select>
                   </label>
                   <label className="block text-sm">
+                    Shipping method
+                    <select
+                      required
+                      value={shippingMethodId}
+                      onChange={(e) => setShippingMethodId(e.target.value)}
+                      className="mt-1 min-h-11 w-full rounded-2xl border border-athaq-ink/15 px-3"
+                    >
+                      {shippingMethods.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name} · {formatMoney(m.feeHalalas)}
+                          {m.etaLabel ? ` · ${m.etaLabel}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-sm">
                     Delivery date
                     <input
                       required
@@ -463,6 +503,22 @@ export default function CheckoutPage() {
                     <p className="font-semibold text-athaq-ink">Delivery instructions</p>
                     <p className="mt-1 whitespace-pre-line">{settings.deliveryInstructions}</p>
                   </div>
+                  {settings.shippingPolicy ? (
+                    <div>
+                      <p className="font-semibold text-athaq-ink">Shipping policy</p>
+                      <p className="mt-1 max-h-32 overflow-y-auto whitespace-pre-line">
+                        {settings.shippingPolicy}
+                      </p>
+                    </div>
+                  ) : null}
+                  {settings.returnPolicy ? (
+                    <div>
+                      <p className="font-semibold text-athaq-ink">Return policy</p>
+                      <p className="mt-1 max-h-32 overflow-y-auto whitespace-pre-line">
+                        {settings.returnPolicy}
+                      </p>
+                    </div>
+                  ) : null}
                   <div>
                     <p className="font-semibold text-athaq-ink">Purchase policy</p>
                     <p className="mt-1 max-h-40 overflow-y-auto whitespace-pre-line">
@@ -490,7 +546,13 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-                disabled={busy || !policyAccepted || !zoneId || !slotId}
+                disabled={
+                  busy ||
+                  !policyAccepted ||
+                  !zoneId ||
+                  !slotId ||
+                  !shippingMethodId
+                }
                 className="w-full rounded-pill bg-athaq-purple py-3 font-semibold text-athaq-cream disabled:opacity-50"
               >
                 {busy ? "Placing order…" : "Place order (no payment)"}

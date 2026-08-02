@@ -111,22 +111,47 @@ model Product {
 }
 
 model ProductVariant {
-  id           String  @id @default(cuid())
-  productId    String
-  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  label        String
-  sku          String?
+  id                String  @id @default(cuid())
+  productId         String
+  product           Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// Display label (e.g. "50g jar" / "Medium")
+  label             String
+  /// Optional structured size (S, M, L, 180cm, …)
+  size              String?
+  /// Optional weight in grams
+  weightGrams       Int?
+  sku               String?
   /// Price in halalas (1 SAR = 100 halalas)
-  priceHalalas Int
-  isDefault    Boolean @default(false)
-  isActive     Boolean @default(true)
-  sortOrder    Int     @default(0)
+  priceHalalas      Int
+  /// Sellable stock for this variant
+  quantityAvailable Int     @default(0)
+  isDefault         Boolean @default(false)
+  isActive          Boolean @default(true)
+  sortOrder         Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([productId])
   @@index([isActive])
+}
+
+/// Named shipping options (Standard, Express, …) — fee in halalas.
+model ShippingMethod {
+  id          String  @id @default(cuid())
+  name        String
+  description String  @default("")
+  feeHalalas  Int     @default(0)
+  etaLabel    String?
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
+  orders      Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
 }
 
 model DeliveryZone {
@@ -136,6 +161,7 @@ model DeliveryZone {
   city                String
   district            String?
   isActive            Boolean        @default(true)
+  /// Zone surcharge (added to shipping method fee); can be 0
   shippingFeeHalalas  Int            @default(0)
   leadTimeDaysMin     Int            @default(1)
   leadTimeDaysMax     Int            @default(3)
@@ -173,6 +199,8 @@ model CommerceSettings {
   id                    String @id @default("default")
   purchasePolicy        String @db.Text
   deliveryInstructions  String @db.Text
+  shippingPolicy        String @default("") @db.Text
+  returnPolicy          String @default("") @db.Text
   orderPrefix           String @default("ATH")
   shopWhatsAppE164      String?
   currencyLabel         String @default("SAR")
@@ -236,6 +264,9 @@ model Order {
   zone                       DeliveryZone               @relation(fields: [zoneId], references: [id])
   slotId                     String
   slot                       DeliverySlot               @relation(fields: [slotId], references: [id])
+  shippingMethodId           String?
+  shippingMethod             ShippingMethod?            @relation(fields: [shippingMethodId], references: [id], onDelete: SetNull)
+  shippingMethodName         String?
   deliveryDate               DateTime                   @db.Date
   shippingFeeHalalas         Int
   subtotalHalalas            Int

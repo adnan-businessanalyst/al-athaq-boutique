@@ -1,10 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch, setStoredToken } from "@/lib/admin-api";
 import { formatMoney } from "@/lib/money";
+
+function sarToHalalas(sar: string): number {
+  const n = Number(sar);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.round(n * 100);
+}
 
 type Slot = {
   id: string;
@@ -38,7 +43,7 @@ export default function AdminDeliveryPage() {
     country: "SA",
     city: "",
     district: "",
-    shippingFeeHalalas: 2500,
+    surchargeSar: "25.00",
     leadTimeDaysMin: 1,
     leadTimeDaysMax: 3,
     etaLabel: "",
@@ -76,7 +81,7 @@ export default function AdminDeliveryPage() {
           ...zoneForm,
           district: zoneForm.district || null,
           etaLabel: zoneForm.etaLabel || null,
-          shippingFeeHalalas: Number(zoneForm.shippingFeeHalalas),
+          shippingFeeHalalas: sarToHalalas(zoneForm.surchargeSar),
         },
       });
       setZoneForm({
@@ -84,7 +89,7 @@ export default function AdminDeliveryPage() {
         country: "SA",
         city: "",
         district: "",
-        shippingFeeHalalas: 2500,
+        surchargeSar: "25.00",
         leadTimeDaysMin: 1,
         leadTimeDaysMax: 3,
         etaLabel: "",
@@ -116,22 +121,11 @@ export default function AdminDeliveryPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10 text-athaq-cream">
-      <div className="flex flex-wrap gap-3 text-sm">
-        <Link href="/my-access-nimda/products" className="underline opacity-80">
-          Products
-        </Link>
-        <Link href="/my-access-nimda/delivery" className="underline opacity-80">
-          Delivery
-        </Link>
-        <Link href="/my-access-nimda/orders" className="underline opacity-80">
-          Orders
-        </Link>
-        <Link href="/my-access-nimda/commerce" className="underline opacity-80">
-          Settings
-        </Link>
-      </div>
-      <h1 className="mt-6 font-display text-3xl">Delivery zones & slots</h1>
+    <div>
+      <h1 className="font-display text-3xl md:text-4xl">Delivery zones & slots</h1>
+      <p className="mt-2 text-sm text-athaq-cream/70">
+        Zone surcharge is added on top of the shipping method fee at checkout.
+      </p>
       {error ? <p className="mt-3 text-red-200">{error}</p> : null}
 
       <form onSubmit={createZone} className="mt-8 grid gap-3 rounded-3xl border border-white/10 bg-white/5 p-5 md:grid-cols-2">
@@ -156,18 +150,21 @@ export default function AdminDeliveryPage() {
           </label>
         ))}
         <label className="text-sm">
-          Shipping fee (halalas)
+          Zone surcharge (SAR)
           <input
-            type="number"
-            value={zoneForm.shippingFeeHalalas}
+            required
+            value={zoneForm.surchargeSar}
             onChange={(e) =>
               setZoneForm((f) => ({
                 ...f,
-                shippingFeeHalalas: Number(e.target.value),
+                surchargeSar: e.target.value,
               }))
             }
             className="mt-1 min-h-11 w-full rounded-2xl border border-white/15 bg-black/20 px-3"
           />
+          <span className="mt-1 block text-xs text-athaq-cream/50">
+            = {formatMoney(sarToHalalas(zoneForm.surchargeSar))}
+          </span>
         </label>
         <button type="submit" className="md:col-span-2 rounded-pill bg-athaq-teal py-2.5 font-semibold">
           Create zone
@@ -221,6 +218,6 @@ export default function AdminDeliveryPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </div>
   );
 }

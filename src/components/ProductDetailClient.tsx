@@ -71,10 +71,20 @@ export function ProductDetailClient({ product }: { product: ProductContent }) {
                   }`}
                 >
                   {v.label}
+                  {v.size ? ` · ${v.size}` : ""}
+                  {v.weightGrams != null ? ` · ${v.weightGrams}g` : ""}
                 </button>
               ))}
             </div>
           </div>
+        ) : null}
+
+        {variant ? (
+          <p className="mt-3 text-sm text-athaq-ink/60">
+            {variant.quantityAvailable > 0
+              ? `${variant.quantityAvailable} in stock`
+              : "Out of stock"}
+          </p>
         ) : null}
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -90,17 +100,26 @@ export function ProductDetailClient({ product }: { product: ProductContent }) {
             <button
               type="button"
               className="min-h-11 min-w-11 text-lg"
-              onClick={() => setQty((q) => Math.min(99, q + 1))}
+              onClick={() =>
+                setQty((q) =>
+                  Math.min(
+                    variant?.quantityAvailable
+                      ? Math.min(99, variant.quantityAvailable)
+                      : 99,
+                    q + 1,
+                  ),
+                )
+              }
             >
               +
             </button>
           </div>
           <button
             type="button"
-            disabled={!variant}
+            disabled={!variant || variant.quantityAvailable < 1}
             className="rounded-pill bg-athaq-purple px-6 py-3 font-semibold text-athaq-cream disabled:opacity-50"
             onClick={() => {
-              if (!variant) return;
+              if (!variant || variant.quantityAvailable < 1) return;
               cart.addItem(
                 {
                   variantId: variant.id,
@@ -111,7 +130,7 @@ export function ProductDetailClient({ product }: { product: ProductContent }) {
                   unitPriceHalalas: variant.priceHalalas,
                   mediaUrl: product.media.mediaUrl,
                 },
-                qty,
+                Math.min(qty, variant.quantityAvailable),
               );
             }}
           >

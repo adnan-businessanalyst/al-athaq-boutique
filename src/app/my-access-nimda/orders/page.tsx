@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch, setStoredToken } from "@/lib/admin-api";
@@ -66,22 +65,8 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10 text-athaq-cream">
-      <div className="flex flex-wrap gap-3 text-sm">
-        <Link href="/my-access-nimda/products" className="underline opacity-80">
-          Products
-        </Link>
-        <Link href="/my-access-nimda/delivery" className="underline opacity-80">
-          Delivery
-        </Link>
-        <Link href="/my-access-nimda/orders" className="underline opacity-80">
-          Orders
-        </Link>
-        <Link href="/my-access-nimda/commerce" className="underline opacity-80">
-          Settings
-        </Link>
-      </div>
-      <h1 className="mt-6 font-display text-3xl">Orders</h1>
+    <div>
+      <h1 className="font-display text-3xl md:text-4xl">Orders</h1>
       {error ? <p className="mt-3 text-red-200">{error}</p> : null}
 
       <ul className="mt-6 space-y-3">
@@ -136,6 +121,6 @@ export default function AdminOrdersPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </div>
   );
 }

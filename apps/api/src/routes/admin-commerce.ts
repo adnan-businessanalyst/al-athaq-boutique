@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import {
   commerceSettingsSchema,
   orderStatusSchema,
+  shippingMethodSchema,
   slotSchema,
   variantSchema,
   zoneSchema,
@@ -47,8 +48,11 @@ adminCommerceRouter.post("/products/:productId/variants", async (req, res) => {
     data: {
       productId: product.id,
       label: parsed.data.label,
+      size: parsed.data.size ?? null,
+      weightGrams: parsed.data.weightGrams ?? null,
       sku: parsed.data.sku ?? null,
       priceHalalas: parsed.data.priceHalalas,
+      quantityAvailable: parsed.data.quantityAvailable ?? 0,
       isDefault: parsed.data.isDefault ?? false,
       isActive: parsed.data.isActive ?? true,
       sortOrder: parsed.data.sortOrder ?? 0,
@@ -94,6 +98,57 @@ adminCommerceRouter.delete("/variants/:id", async (req, res) => {
     return res.json({ ok: true });
   } catch {
     return res.status(404).json({ error: "Variant not found" });
+  }
+});
+
+// ——— Shipping methods ———
+adminCommerceRouter.get("/shipping-methods", async (_req, res) => {
+  const methods = await prisma.shippingMethod.findMany({
+    orderBy: { sortOrder: "asc" },
+  });
+  return res.json({ methods });
+});
+
+adminCommerceRouter.post("/shipping-methods", async (req, res) => {
+  const parsed = shippingMethodSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+  }
+  const method = await prisma.shippingMethod.create({
+    data: {
+      name: parsed.data.name,
+      description: parsed.data.description ?? "",
+      feeHalalas: parsed.data.feeHalalas,
+      etaLabel: parsed.data.etaLabel ?? null,
+      isActive: parsed.data.isActive ?? true,
+      sortOrder: parsed.data.sortOrder ?? 0,
+    },
+  });
+  return res.status(201).json({ method });
+});
+
+adminCommerceRouter.patch("/shipping-methods/:id", async (req, res) => {
+  const parsed = shippingMethodSchema.partial().safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Validation failed" });
+  }
+  try {
+    const method = await prisma.shippingMethod.update({
+      where: { id: req.params.id },
+      data: parsed.data,
+    });
+    return res.json({ method });
+  } catch {
+    return res.status(404).json({ error: "Shipping method not found" });
+  }
+});
+
+adminCommerceRouter.delete("/shipping-methods/:id", async (req, res) => {
+  try {
+    await prisma.shippingMethod.delete({ where: { id: req.params.id } });
+    return res.json({ ok: true });
+  } catch {
+    return res.status(404).json({ error: "Shipping method not found" });
   }
 });
 

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiFetch, setStoredToken } from "@/lib/admin-api";
@@ -8,6 +7,8 @@ import { ApiError, apiFetch, setStoredToken } from "@/lib/admin-api";
 type Settings = {
   purchasePolicy: string;
   deliveryInstructions: string;
+  shippingPolicy: string;
+  returnPolicy: string;
   orderPrefix: string;
   shopWhatsAppE164: string | null;
   currencyLabel: string;
@@ -18,6 +19,8 @@ export default function AdminCommercePage() {
   const [form, setForm] = useState<Settings>({
     purchasePolicy: "",
     deliveryInstructions: "",
+    shippingPolicy: "",
+    returnPolicy: "",
     orderPrefix: "ATH",
     shopWhatsAppE164: "",
     currencyLabel: "SAR",
@@ -31,8 +34,13 @@ export default function AdminCommercePage() {
       .then((r) => {
         if (r.settings) {
           setForm({
-            ...r.settings,
+            purchasePolicy: r.settings.purchasePolicy || "",
+            deliveryInstructions: r.settings.deliveryInstructions || "",
+            shippingPolicy: r.settings.shippingPolicy || "",
+            returnPolicy: r.settings.returnPolicy || "",
+            orderPrefix: r.settings.orderPrefix || "ATH",
             shopWhatsAppE164: r.settings.shopWhatsAppE164 || "",
+            currencyLabel: r.settings.currencyLabel || "SAR",
           });
         }
         setLoading(false);
@@ -62,17 +70,15 @@ export default function AdminCommercePage() {
   }
 
   if (loading) {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-3xl items-center px-5 text-athaq-cream/70">
-        Loading…
-      </main>
-    );
+    return <p className="text-athaq-cream/70">Loading…</p>;
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 text-athaq-cream">
-      <AdminNav />
-      <h1 className="mt-6 font-display text-3xl">Checkout settings</h1>
+    <div>
+      <h1 className="font-display text-3xl md:text-4xl">Policies & settings</h1>
+      <p className="mt-2 text-sm text-athaq-cream/70">
+        Also editable from Products → Policies.
+      </p>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <label className="block text-sm">
           Order prefix
@@ -105,7 +111,7 @@ export default function AdminCommercePage() {
           Delivery instructions
           <textarea
             required
-            rows={5}
+            rows={4}
             value={form.deliveryInstructions}
             onChange={(e) =>
               setForm((f) => ({ ...f, deliveryInstructions: e.target.value }))
@@ -114,10 +120,32 @@ export default function AdminCommercePage() {
           />
         </label>
         <label className="block text-sm">
+          Shipping policy
+          <textarea
+            rows={5}
+            value={form.shippingPolicy}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, shippingPolicy: e.target.value }))
+            }
+            className="mt-1 w-full rounded-2xl border border-white/15 bg-black/20 px-3 py-2"
+          />
+        </label>
+        <label className="block text-sm">
+          Return policy
+          <textarea
+            rows={5}
+            value={form.returnPolicy}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, returnPolicy: e.target.value }))
+            }
+            className="mt-1 w-full rounded-2xl border border-white/15 bg-black/20 px-3 py-2"
+          />
+        </label>
+        <label className="block text-sm">
           Purchase policy
           <textarea
             required
-            rows={8}
+            rows={6}
             value={form.purchasePolicy}
             onChange={(e) =>
               setForm((f) => ({ ...f, purchasePolicy: e.target.value }))
@@ -134,25 +162,6 @@ export default function AdminCommercePage() {
           Save settings
         </button>
       </form>
-    </main>
-  );
-}
-
-function AdminNav() {
-  return (
-    <div className="flex flex-wrap gap-3 text-sm">
-      <Link href="/my-access-nimda/products" className="underline opacity-80">
-        Products
-      </Link>
-      <Link href="/my-access-nimda/delivery" className="underline opacity-80">
-        Delivery
-      </Link>
-      <Link href="/my-access-nimda/orders" className="underline opacity-80">
-        Orders
-      </Link>
-      <Link href="/my-access-nimda/commerce" className="underline opacity-80">
-        Settings
-      </Link>
     </div>
   );
 }

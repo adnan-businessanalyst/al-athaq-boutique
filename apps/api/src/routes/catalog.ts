@@ -42,9 +42,19 @@ catalogRouter.get("/commerce-settings", async (_req, res) => {
     settings: {
       purchasePolicy: settings.purchasePolicy,
       deliveryInstructions: settings.deliveryInstructions,
+      shippingPolicy: settings.shippingPolicy,
+      returnPolicy: settings.returnPolicy,
       currencyLabel: settings.currencyLabel,
       shopWhatsAppE164: settings.shopWhatsAppE164,
       orderPrefix: settings.orderPrefix,
     },
   });
+});
+
+catalogRouter.get("/shipping-methods", async (_req, res) => {
+  const methods = await prisma.shippingMethod.findMany({
+    where: { isActive: true },
+    orderBy: { sortOrder: "asc" },
+  });
+  return res.json({ methods });
 });

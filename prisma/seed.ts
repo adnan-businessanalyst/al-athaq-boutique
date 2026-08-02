@@ -96,8 +96,24 @@ async function main() {
       basename: "product-1",
       sortOrder: 0,
       variants: [
-        { label: "50g jar", priceHalalas: 8900, isDefault: true, sortOrder: 0 },
-        { label: "100g jar", priceHalalas: 14900, isDefault: false, sortOrder: 1 },
+        {
+          label: "50g jar",
+          size: "Small",
+          weightGrams: 50,
+          priceHalalas: 8900,
+          quantityAvailable: 40,
+          isDefault: true,
+          sortOrder: 0,
+        },
+        {
+          label: "100g jar",
+          size: "Large",
+          weightGrams: 100,
+          priceHalalas: 14900,
+          quantityAvailable: 25,
+          isDefault: false,
+          sortOrder: 1,
+        },
       ],
     },
     {
@@ -109,7 +125,15 @@ async function main() {
       basename: "product-2",
       sortOrder: 1,
       variants: [
-        { label: "Standard", priceHalalas: 7500, isDefault: true, sortOrder: 0 },
+        {
+          label: "Standard",
+          size: "Standard",
+          weightGrams: 40,
+          priceHalalas: 7500,
+          quantityAvailable: 50,
+          isDefault: true,
+          sortOrder: 0,
+        },
       ],
     },
     {
@@ -121,7 +145,15 @@ async function main() {
       basename: "product-3",
       sortOrder: 2,
       variants: [
-        { label: "Medium", priceHalalas: 22000, isDefault: true, sortOrder: 0 },
+        {
+          label: "Medium",
+          size: "M",
+          weightGrams: 800,
+          priceHalalas: 22000,
+          quantityAvailable: 15,
+          isDefault: true,
+          sortOrder: 0,
+        },
       ],
     },
     {
@@ -133,7 +165,15 @@ async function main() {
       basename: "product-4",
       sortOrder: 3,
       variants: [
-        { label: "180cm", priceHalalas: 18500, isDefault: true, sortOrder: 0 },
+        {
+          label: "180cm",
+          size: "180cm",
+          weightGrams: 600,
+          priceHalalas: 18500,
+          quantityAvailable: 20,
+          isDefault: true,
+          sortOrder: 0,
+        },
       ],
     },
     {
@@ -145,7 +185,15 @@ async function main() {
       basename: "product-5",
       sortOrder: 4,
       variants: [
-        { label: "One size", priceHalalas: 12000, isDefault: true, sortOrder: 0 },
+        {
+          label: "One size",
+          size: "OS",
+          weightGrams: 12,
+          priceHalalas: 12000,
+          quantityAvailable: 30,
+          isDefault: true,
+          sortOrder: 0,
+        },
       ],
     },
     {
@@ -157,7 +205,15 @@ async function main() {
       basename: "product-6",
       sortOrder: 5,
       variants: [
-        { label: "Gift set", priceHalalas: 19900, isDefault: true, sortOrder: 0 },
+        {
+          label: "Gift set",
+          size: "Set",
+          weightGrams: 450,
+          priceHalalas: 19900,
+          quantityAvailable: 18,
+          isDefault: true,
+          sortOrder: 0,
+        },
       ],
     },
     {
@@ -169,7 +225,15 @@ async function main() {
       basename: "product-7",
       sortOrder: 6,
       variants: [
-        { label: "One size", priceHalalas: 9500, isDefault: true, sortOrder: 0 },
+        {
+          label: "One size",
+          size: "OS",
+          weightGrams: 180,
+          priceHalalas: 9500,
+          quantityAvailable: 35,
+          isDefault: true,
+          sortOrder: 0,
+        },
       ],
     },
   ];
@@ -213,7 +277,10 @@ async function main() {
         data: {
           productId: row.id,
           label: v.label,
+          size: v.size,
+          weightGrams: v.weightGrams,
           priceHalalas: v.priceHalalas,
+          quantityAvailable: v.quantityAvailable,
           isDefault: v.isDefault,
           isActive: true,
           sortOrder: v.sortOrder,
@@ -239,9 +306,13 @@ async function main() {
     create: {
       id: "default",
       purchasePolicy:
-        "By placing an order you confirm that product details, delivery fees, and timing are understood. Orders are confirmed without online payment in this demo — our team may contact you to arrange payment. Returns are accepted for unused items within 7 days where permitted by Saudi consumer law. Al Athaq Boutique reserves the right to cancel orders outside delivery zones.",
+        "By placing an order you confirm that product details, delivery fees, and timing are understood. Orders are confirmed without online payment in this demo — our team may contact you to arrange payment.",
       deliveryInstructions:
-        "We deliver only within listed zones. Please ensure someone is available during your chosen slot. Apartment/villa number and a reachable mobile number are required. Drivers may call on arrival. Lead times shown per zone are estimates.",
+        "We deliver only within listed zones. Please ensure someone is available during your chosen slot. Apartment/villa number and a reachable mobile number are required. Drivers may call on arrival.",
+      shippingPolicy:
+        "Shipping is available only to active delivery zones. Method fees plus any zone surcharge apply. Estimated arrival windows are shown per method and zone; delays due to weather or access issues may occur.",
+      returnPolicy:
+        "Unused items in original packaging may be returned within 7 days of delivery where permitted by Saudi consumer law. Personalized or opened fragrance goods may be non-returnable. Contact us with your confirmation number to start a return.",
       orderPrefix: "ATH",
       shopWhatsAppE164: "+966500000000",
       currencyLabel: "SAR",
@@ -249,13 +320,55 @@ async function main() {
     },
     update: {
       purchasePolicy:
-        "By placing an order you confirm that product details, delivery fees, and timing are understood. Orders are confirmed without online payment in this demo — our team may contact you to arrange payment. Returns are accepted for unused items within 7 days where permitted by Saudi consumer law. Al Athaq Boutique reserves the right to cancel orders outside delivery zones.",
+        "By placing an order you confirm that product details, delivery fees, and timing are understood. Orders are confirmed without online payment in this demo — our team may contact you to arrange payment.",
       deliveryInstructions:
-        "We deliver only within listed zones. Please ensure someone is available during your chosen slot. Apartment/villa number and a reachable mobile number are required. Drivers may call on arrival. Lead times shown per zone are estimates.",
+        "We deliver only within listed zones. Please ensure someone is available during your chosen slot. Apartment/villa number and a reachable mobile number are required. Drivers may call on arrival.",
+      shippingPolicy:
+        "Shipping is available only to active delivery zones. Method fees plus any zone surcharge apply. Estimated arrival windows are shown per method and zone; delays due to weather or access issues may occur.",
+      returnPolicy:
+        "Unused items in original packaging may be returned within 7 days of delivery where permitted by Saudi consumer law. Personalized or opened fragrance goods may be non-returnable. Contact us with your confirmation number to start a return.",
       shopWhatsAppE164: "+966500000000",
       currencyLabel: "SAR",
     },
   });
+
+  const shippingMethods = [
+    {
+      name: "Standard delivery",
+      description: "Scheduled slot delivery within your zone.",
+      feeHalalas: 1500,
+      etaLabel: "Uses zone lead time",
+      sortOrder: 0,
+    },
+    {
+      name: "Express delivery",
+      description: "Priority handling when capacity allows.",
+      feeHalalas: 3500,
+      etaLabel: "Faster when available",
+      sortOrder: 1,
+    },
+  ];
+  for (const m of shippingMethods) {
+    const existing = await prisma.shippingMethod.findFirst({
+      where: { name: m.name },
+    });
+    if (existing) {
+      await prisma.shippingMethod.update({
+        where: { id: existing.id },
+        data: {
+          description: m.description,
+          feeHalalas: m.feeHalalas,
+          etaLabel: m.etaLabel,
+          isActive: true,
+          sortOrder: m.sortOrder,
+        },
+      });
+    } else {
+      await prisma.shippingMethod.create({
+        data: { ...m, isActive: true },
+      });
+    }
+  }
 
   // Delivery zones + slots (replace demo rows by name)
   const zoneDefs = [

@@ -107,7 +107,7 @@ export function Products({ products }: ProductsProps) {
                         </p>
                       ) : null}
 
-                      {variant ? (
+                      {variant && variant.quantityAvailable > 0 ? (
                         <div className="mt-4 flex items-center gap-2">
                           {inCart > 0 ? (
                             <div className="inline-flex items-center rounded-pill border border-athaq-ink/15 bg-white/60">
@@ -161,6 +161,8 @@ export function Products({ products }: ProductsProps) {
                             Details
                           </Link>
                         </div>
+                      ) : variant ? (
+                        <p className="mt-4 text-sm text-athaq-ink/50">Out of stock</p>
                       ) : null}
                     </div>
                   </article>
