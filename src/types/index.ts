@@ -40,14 +40,26 @@ export interface FeaturedContent {
   link: string;
 }
 
+export interface ProductVariantContent {
+  id: string;
+  label: string;
+  priceHalalas: number;
+  isDefault: boolean;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface ProductContent {
   id: string;
   slug: string;
   name: string;
   description: string;
+  longDescription?: string;
   category: string;
   media: MediaAsset;
   sortOrder: number;
+  variants: ProductVariantContent[];
+  defaultVariant: ProductVariantContent | null;
 }
 
 export interface HomepageData {

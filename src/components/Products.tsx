@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { Media } from "@/components/Media";
 import { DiamondMotif } from "@/components/DiamondMotif";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useCart } from "@/components/CartProvider";
+import { formatMoney } from "@/lib/money";
 import type { ProductContent } from "@/types";
 
 type ProductsProps = {
@@ -11,6 +14,7 @@ type ProductsProps = {
 
 export function Products({ products }: ProductsProps) {
   const { dict } = useLanguage();
+  const cart = useCart();
 
   return (
     <section
@@ -51,10 +55,19 @@ export function Products({ products }: ProductsProps) {
                 description: product.description,
                 category: product.category,
               };
+              const variant = product.defaultVariant;
+              const inCart = variant
+                ? cart.lines.find((l) => l.variantId === variant.id)?.quantity ??
+                  0
+                : 0;
+
               return (
                 <li key={product.id}>
                   <article className="group flex h-full flex-col">
-                    <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-athaq-purple/5">
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-athaq-purple/5"
+                    >
                       <Media
                         src={product.media.mediaUrl}
                         alt={product.media.alt}
@@ -72,14 +85,83 @@ export function Products({ products }: ProductsProps) {
                       <span className="absolute start-3 top-3 rounded-pill bg-athaq-cream/90 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-athaq-ink backdrop-blur-sm">
                         {copy.category}
                       </span>
-                    </div>
+                    </Link>
                     <div className="mt-4 flex flex-1 flex-col">
-                      <h3 className="font-display text-xl text-athaq-ink">
-                        {copy.name}
-                      </h3>
+                      <Link href={`/products/${product.slug}`}>
+                        <h3 className="font-display text-xl text-athaq-ink hover:text-athaq-purple">
+                          {copy.name}
+                        </h3>
+                      </Link>
                       <p className="mt-1.5 text-sm leading-relaxed text-athaq-ink/70">
                         {copy.description}
                       </p>
+                      {variant ? (
+                        <p className="mt-2 text-sm font-semibold text-athaq-teal">
+                          {formatMoney(variant.priceHalalas)}
+                          {product.variants.length > 1 ? (
+                            <span className="font-normal text-athaq-ink/50">
+                              {" "}
+                              · {variant.label}
+                            </span>
+                          ) : null}
+                        </p>
+                      ) : null}
+
+                      {variant ? (
+                        <div className="mt-4 flex items-center gap-2">
+                          {inCart > 0 ? (
+                            <div className="inline-flex items-center rounded-pill border border-athaq-ink/15 bg-white/60">
+                              <button
+                                type="button"
+                                className="min-h-10 min-w-10 text-lg"
+                                aria-label="Decrease quantity"
+                                onClick={() =>
+                                  cart.setQty(variant.id, inCart - 1)
+                                }
+                              >
+                                −
+                              </button>
+                              <span className="min-w-8 text-center text-sm font-semibold">
+                                {inCart}
+                              </span>
+                              <button
+                                type="button"
+                                className="min-h-10 min-w-10 text-lg"
+                                aria-label="Increase quantity"
+                                onClick={() =>
+                                  cart.setQty(variant.id, inCart + 1)
+                                }
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="rounded-pill bg-athaq-purple px-4 py-2 text-sm font-semibold text-athaq-cream"
+                              onClick={() =>
+                                cart.addItem({
+                                  variantId: variant.id,
+                                  productId: product.id,
+                                  productSlug: product.slug,
+                                  productName: product.name,
+                                  variantLabel: variant.label,
+                                  unitPriceHalalas: variant.priceHalalas,
+                                  mediaUrl: product.media.mediaUrl,
+                                })
+                              }
+                            >
+                              Add to cart
+                            </button>
+                          )}
+                          <Link
+                            href={`/products/${product.slug}`}
+                            className="text-sm font-medium text-athaq-ink/60 underline-offset-2 hover:underline"
+                          >
+                            Details
+                          </Link>
+                        </div>
+                      ) : null}
                     </div>
                   </article>
                 </li>

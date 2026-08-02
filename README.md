@@ -22,6 +22,18 @@ npm run dev            # Next on :3000
 npm run dev:api        # Express on :4000 (second terminal)
 ```
 
+### Local cart + checkout demo (no payment / Mailgun / WhatsApp API)
+
+1. Ensure `NEXT_PUBLIC_API_URL=http://localhost:4000` and API is running.
+2. Open `http://localhost:3000/#products` — use **+ / −** on a card (default variant) or open a PDP at `/products/[slug]`.
+3. Open **Cart** → **Checkout**.
+4. Guest: enter email, phone, name, address. Use seeded zone location e.g. city `Riyadh`, district `Olaya` (or `Jeddah` / `Corniche`).
+5. Click **Validate delivery location** → pick date + time slot → accept policy → **Place order**.
+6. Land on `/order/confirm/ATH-…` — confirmation number, UNPAID status, email stub note, WhatsApp deep-link button (no live send).
+7. Admin: `/my-access-nimda` → **Orders** / **Delivery** / **Settings** / product **Variants**.
+
+Prices are stored in **halalas** (1 SAR = 100) and displayed as SAR. Server recalculates totals on order create.
+
 Homepage settings/featured can fall back to in-code defaults if the DB is unreachable. **Products never use hardcoded catalog fallbacks** — empty state is shown until Neon has products.
 
 ### Neon setup

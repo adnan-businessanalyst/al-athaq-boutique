@@ -16,6 +16,30 @@ enum MediaType {
   svg
 }
 
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum LocationVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  NEEDS_REVIEW
+}
+
 model SiteSettings {
   id String @id @default("default")
 
@@ -50,11 +74,10 @@ model SiteSettings {
 
 /// Featured homepage slots — up to 4 tagged products (position 1–4).
 model Featured {
-  id        String   @id @default(cuid())
-  /// Slot tag: 1 (large), 2 (wide), 3 (small A), 4 (small B)
-  position  Int      @unique
+  id        String  @id @default(cuid())
+  position  Int     @unique
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -64,17 +87,20 @@ model Featured {
 }
 
 model Product {
-  id          String     @id @default(cuid())
-  slug        String     @unique
-  name        String
-  description String
-  category    String
-  mediaUrl    String
-  mediaType   MediaType  @default(image)
-  posterUrl   String?
-  alt         String
-  sortOrder   Int        @default(0)
-  featured    Featured[]
+  id               String           @id @default(cuid())
+  slug             String           @unique
+  name             String
+  description      String
+  longDescription  String           @default("")
+  category         String
+  mediaUrl         String
+  mediaType        MediaType        @default(image)
+  posterUrl        String?
+  alt              String
+  sortOrder        Int              @default(0)
+  isActive         Boolean          @default(true)
+  featured         Featured[]
+  variants         ProductVariant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,6 +108,172 @@ model Product {
   @@index([sortOrder])
   @@index([slug])
   @@index([category])
+}
+
+model ProductVariant {
+  id           String  @id @default(cuid())
+  productId    String
+  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label        String
+  sku          String?
+  /// Price in halalas (1 SAR = 100 halalas)
+  priceHalalas Int
+  isDefault    Boolean @default(false)
+  isActive     Boolean @default(true)
+  sortOrder    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([isActive])
+}
+
+model DeliveryZone {
+  id                  String         @id @default(cuid())
+  name                String
+  country             String         @default("SA")
+  city                String
+  district            String?
+  isActive            Boolean        @default(true)
+  shippingFeeHalalas  Int            @default(0)
+  leadTimeDaysMin     Int            @default(1)
+  leadTimeDaysMax     Int            @default(3)
+  etaLabel            String?
+  slots               DeliverySlot[]
+  orders              Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([country, city])
+  @@index([isActive])
+}
+
+model DeliverySlot {
+  id        String       @id @default(cuid())
+  zoneId    String
+  zone      DeliveryZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  label     String
+  startTime String?
+  endTime   String?
+  isActive  Boolean      @default(true)
+  sortOrder Int          @default(0)
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([zoneId])
+  @@index([isActive])
+}
+
+/// Checkout / commerce storefront settings (singleton).
+model CommerceSettings {
+  id                    String @id @default("default")
+  purchasePolicy        String @db.Text
+  deliveryInstructions  String @db.Text
+  orderPrefix           String @default("ATH")
+  shopWhatsAppE164      String?
+  currencyLabel         String @default("SAR")
+  /// Monotonic counter for confirmation numbers
+  orderSequence         Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Customer {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  phone        String?
+  name         String?
+  passwordHash String?
+  addresses    Address[]
+  orders       Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Address {
+  id         String    @id @default(cuid())
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  email      String
+  phone      String
+  fullName   String
+  line1      String
+  line2      String?
+  city       String
+  district   String?
+  country    String    @default("SA")
+  postalCode String?
+  notes      String?
+  orders     Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([city])
+}
+
+model Order {
+  id                         String                     @id @default(cuid())
+  confirmationNumber         String                     @unique
+  customerId                 String?
+  customer                   Customer?                  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  addressId                  String
+  address                    Address                    @relation(fields: [addressId], references: [id])
+  email                      String
+  phone                      String
+  fullName                   String
+  isGuest                    Boolean                    @default(true)
+  zoneId                     String
+  zone                       DeliveryZone               @relation(fields: [zoneId], references: [id])
+  slotId                     String
+  slot                       DeliverySlot               @relation(fields: [slotId], references: [id])
+  deliveryDate               DateTime                   @db.Date
+  shippingFeeHalalas         Int
+  subtotalHalalas            Int
+  totalHalalas               Int
+  currencyLabel              String                     @default("SAR")
+  paymentStatus              PaymentStatus              @default(UNPAID)
+  fulfillmentStatus          FulfillmentStatus          @default(PENDING)
+  locationVerificationStatus LocationVerificationStatus @default(PENDING)
+  policyAcceptedAt           DateTime
+  customerNotes              String?
+  /// Stub: set when fake confirmation email is "sent"
+  emailStubSentAt            DateTime?
+  whatsappStubNote           String?
+  items                      OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([confirmationNumber])
+  @@index([email])
+  @@index([fulfillmentStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id               String  @id @default(cuid())
+  orderId          String
+  order            Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId        String?
+  variantId        String?
+  productName      String
+  productSlug      String
+  variantLabel     String
+  unitPriceHalalas Int
+  quantity         Int
+  lineTotalHalalas Int
+
+  @@index([orderId])
 }
 
 model AdminUser {

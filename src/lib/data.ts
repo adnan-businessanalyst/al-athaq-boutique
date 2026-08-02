@@ -72,7 +72,16 @@ async function fetchFromDatabase(): Promise<HomepageData | null> {
         orderBy: { position: "asc" },
         include: { product: true },
       }),
-      prisma.product.findMany({ orderBy: { sortOrder: "asc" } }),
+      prisma.product.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+        include: {
+          variants: {
+            where: { isActive: true },
+            orderBy: { sortOrder: "asc" },
+          },
+        },
+      }),
     ]);
 
     if (!settings) return null;
@@ -135,15 +144,30 @@ async function fetchFromDatabase(): Promise<HomepageData | null> {
       ];
     });
 
-    const productContent: ProductContent[] = products.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      description: p.description,
-      category: p.category,
-      media: toMedia(p.mediaUrl, p.mediaType, p.alt, p.posterUrl),
-      sortOrder: p.sortOrder,
-    }));
+    const productContent: ProductContent[] = products.map((p) => {
+      const variants = p.variants.map((v) => ({
+        id: v.id,
+        label: v.label,
+        priceHalalas: v.priceHalalas,
+        isDefault: v.isDefault,
+        isActive: v.isActive,
+        sortOrder: v.sortOrder,
+      }));
+      const defaultVariant =
+        variants.find((v) => v.isDefault) ?? variants[0] ?? null;
+      return {
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        description: p.description,
+        longDescription: p.longDescription,
+        category: p.category,
+        media: toMedia(p.mediaUrl, p.mediaType, p.alt, p.posterUrl),
+        sortOrder: p.sortOrder,
+        variants,
+        defaultVariant,
+      };
+    });
 
     return {
       settings: site,

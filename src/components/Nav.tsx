@@ -5,9 +5,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useCart } from "@/components/CartProvider";
 
 export function Nav() {
   const { dict } = useLanguage();
+  const cart = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const drawerId = useId();
@@ -16,9 +18,10 @@ export function Nav() {
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const links = [
-    { href: "#featured", label: dict.nav.featured },
-    { href: "#our-story", label: dict.nav.ourStory },
-    { href: "#products", label: dict.nav.products },
+    { href: "/#featured", label: dict.nav.featured },
+    { href: "/#our-story", label: dict.nav.ourStory },
+    { href: "/#products", label: dict.nav.products },
+    { href: "/cart", label: `Cart${cart.itemCount ? ` (${cart.itemCount})` : ""}` },
   ] as const;
 
   useEffect(() => {
@@ -100,11 +103,34 @@ export function Nav() {
           </Link>
         </div>
 
-        <div className="hidden items-center justify-self-end md:flex">
+        <div className="hidden items-center gap-2 justify-self-end md:flex">
+          <Link
+            href="/cart"
+            className="relative inline-flex min-h-11 items-center rounded-pill px-3 text-sm font-semibold"
+          >
+            Cart
+            {cart.itemCount > 0 ? (
+              <span className="ms-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-athaq-teal px-1.5 text-[0.65rem] text-white">
+                {cart.itemCount}
+              </span>
+            ) : null}
+          </Link>
           <LanguageSwitcher tone={scrolled ? "light" : "dark"} />
         </div>
 
         <div className="flex items-center gap-1.5 justify-self-end md:hidden">
+          <Link
+            href="/cart"
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-pill text-sm font-semibold"
+            aria-label={`Cart${cart.itemCount ? `, ${cart.itemCount} items` : ""}`}
+          >
+            Cart
+            {cart.itemCount > 0 ? (
+              <span className="absolute -end-0.5 -top-0.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-athaq-teal px-1 text-[0.6rem] text-white">
+                {cart.itemCount}
+              </span>
+            ) : null}
+          </Link>
           <LanguageSwitcher tone={scrolled ? "light" : "dark"} />
           <button
             ref={menuBtnRef}

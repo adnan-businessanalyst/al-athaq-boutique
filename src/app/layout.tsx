@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Marcellus, Work_Sans } from "next/font/google";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import { CartProvider } from "@/components/CartProvider";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -102,7 +103,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${marcellus.variable} ${workSans.variable}`}>
       <body className="min-h-screen bg-athaq-cream font-sans text-athaq-ink antialiased">
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          <CartProvider>{children}</CartProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

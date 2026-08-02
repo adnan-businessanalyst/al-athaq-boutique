@@ -16,6 +16,7 @@ const emptyForm = {
   slug: "",
   name: "",
   description: "",
+  longDescription: "",
   category: "",
   mediaUrl: "",
   mediaType: "image" as "image" | "video" | "svg",
@@ -34,8 +35,13 @@ const SLOT_LABELS: Record<number, string> = {
 export default function AdminProductsPage() {
   const router = useRouter();
   const [me, setMe] = useState<AdminMe | null>(null);
-  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [products, setProducts] = useState<(ApiProduct & { variants?: { id: string; label: string; priceHalalas: number; isDefault: boolean }[] })[]>([]);
   const [featured, setFeatured] = useState<ApiFeatured[]>([]);
+  const [variantForm, setVariantForm] = useState({
+    label: "",
+    priceHalalas: 10000,
+    isDefault: false,
+  });
   const [slotDrafts, setSlotDrafts] = useState<Record<number, string>>({
     1: "",
     2: "",
@@ -84,6 +90,7 @@ export default function AdminProductsPage() {
       slug: p.slug,
       name: p.name,
       description: p.description,
+      longDescription: (p as { longDescription?: string }).longDescription || "",
       category: p.category,
       mediaUrl: p.mediaUrl,
       mediaType: p.mediaType,
@@ -204,6 +211,15 @@ export default function AdminProductsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3 text-sm">
+          <Link href="/my-access-nimda/delivery" className="rounded-pill border border-white/20 px-4 py-2 hover:bg-white/10">
+            Delivery
+          </Link>
+          <Link href="/my-access-nimda/orders" className="rounded-pill border border-white/20 px-4 py-2 hover:bg-white/10">
+            Orders
+          </Link>
+          <Link href="/my-access-nimda/commerce" className="rounded-pill border border-white/20 px-4 py-2 hover:bg-white/10">
+            Settings
+          </Link>
           <Link
             href="/my-access-nimda/change-password"
             className="rounded-pill border border-white/20 px-4 py-2 hover:bg-white/10"
@@ -348,10 +364,25 @@ export default function AdminProductsPage() {
             <textarea
               id="description"
               required
-              rows={4}
+              rows={3}
               value={form.description}
               onChange={(e) =>
                 setForm((f) => ({ ...f, description: e.target.value }))
+              }
+              className="w-full rounded-2xl border border-white/15 bg-black/20 px-3 py-2 outline-none focus:ring-2 focus:ring-athaq-teal"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="mb-1 block text-sm" htmlFor="longDescription">
+              Long description (PDP)
+            </label>
+            <textarea
+              id="longDescription"
+              rows={4}
+              value={form.longDescription}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, longDescription: e.target.value }))
               }
               className="w-full rounded-2xl border border-white/15 bg-black/20 px-3 py-2 outline-none focus:ring-2 focus:ring-athaq-teal"
             />
@@ -383,6 +414,82 @@ export default function AdminProductsPage() {
           </div>
         </form>
       </section>
+
+      {editingId ? (
+        <section className="mb-10 rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 className="font-display text-2xl">Variants</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            {(products.find((p) => p.id === editingId)?.variants || []).map((v) => (
+              <li key={v.id} className="flex justify-between gap-3 rounded-xl bg-black/20 px-3 py-2">
+                <span>
+                  {v.label} · {(v.priceHalalas / 100).toFixed(2)} SAR
+                  {v.isDefault ? " · default" : ""}
+                </span>
+                <button
+                  type="button"
+                  className="text-red-200"
+                  onClick={async () => {
+                    await apiFetch(`/admin/variants/${v.id}`, { method: "DELETE" });
+                    await load();
+                  }}
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+          <form
+            className="mt-4 grid gap-3 md:grid-cols-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              await apiFetch(`/admin/products/${editingId}/variants`, {
+                method: "POST",
+                body: {
+                  label: variantForm.label,
+                  priceHalalas: Number(variantForm.priceHalalas),
+                  isDefault: variantForm.isDefault,
+                },
+              });
+              setVariantForm({ label: "", priceHalalas: 10000, isDefault: false });
+              await load();
+            }}
+          >
+            <input
+              required
+              placeholder="Label (e.g. 50g)"
+              value={variantForm.label}
+              onChange={(e) => setVariantForm((f) => ({ ...f, label: e.target.value }))}
+              className="min-h-11 rounded-2xl border border-white/15 bg-black/20 px-3"
+            />
+            <input
+              type="number"
+              required
+              placeholder="Price halalas"
+              value={variantForm.priceHalalas}
+              onChange={(e) =>
+                setVariantForm((f) => ({
+                  ...f,
+                  priceHalalas: Number(e.target.value),
+                }))
+              }
+              className="min-h-11 rounded-2xl border border-white/15 bg-black/20 px-3"
+            />
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={variantForm.isDefault}
+                onChange={(e) =>
+                  setVariantForm((f) => ({ ...f, isDefault: e.target.checked }))
+                }
+              />
+              Default
+            </label>
+            <button type="submit" className="md:col-span-3 rounded-pill bg-athaq-teal py-2 font-semibold">
+              Add variant
+            </button>
+          </form>
+        </section>
+      ) : null}
 
       <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
         <h2 className="font-display text-2xl">Catalog ({products.length})</h2>

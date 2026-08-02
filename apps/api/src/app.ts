@@ -6,6 +6,11 @@ import { authRouter } from "./routes/auth";
 import { productsRouter } from "./routes/products";
 import { featuredRouter } from "./routes/featured";
 import { newsletterRouter } from "./routes/newsletter";
+import { catalogRouter } from "./routes/catalog";
+import { deliveryRouter } from "./routes/delivery";
+import { customerRouter } from "./routes/customer";
+import { ordersRouter } from "./routes/orders";
+import { adminCommerceRouter } from "./routes/admin-commerce";
 import { apiRateLimit } from "./middleware/rateLimit";
 
 function allowedOrigins(): string[] {
@@ -59,6 +64,11 @@ export function createApp() {
   });
 
   app.use("/auth", authRouter);
+  app.use("/catalog", catalogRouter);
+  app.use("/delivery", deliveryRouter);
+  app.use("/customer", customerRouter);
+  app.use("/orders", ordersRouter);
+  app.use("/admin", adminCommerceRouter);
   app.use("/products", productsRouter);
   app.use("/featured", featuredRouter);
   app.use("/newsletter", newsletterRouter);

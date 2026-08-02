@@ -90,57 +90,87 @@ async function main() {
       slug: "royal-oud-bakhoor",
       name: "Royal Oud Bakhoor",
       description: "A deep, resinous blend for ceremonial evenings.",
+      longDescription:
+        "Our signature Royal Oud Bakhoor is blended for slow, ceremonial burns. Choose a jar size that fits your ritual — small for travel and gifts, large for the home majlis.",
       category: "Incense",
       basename: "product-1",
       sortOrder: 0,
+      variants: [
+        { label: "50g jar", priceHalalas: 8900, isDefault: true, sortOrder: 0 },
+        { label: "100g jar", priceHalalas: 14900, isDefault: false, sortOrder: 1 },
+      ],
     },
     {
       slug: "amber-rose-incense",
       name: "Amber Rose Incense",
       description: "Warm amber wrapped in soft floral notes.",
+      longDescription: "A soft amber-rose blend suited to evening gatherings.",
       category: "Incense",
       basename: "product-2",
       sortOrder: 1,
+      variants: [
+        { label: "Standard", priceHalalas: 7500, isDefault: true, sortOrder: 0 },
+      ],
     },
     {
       slug: "mashrabiya-lantern",
       name: "Mashrabiya Lantern",
       description: "Pierced metalwork that casts patterned light.",
+      longDescription: "Hand-finished pierced metal that throws patterned light across the room.",
       category: "Lanterns",
       basename: "product-3",
       sortOrder: 2,
+      variants: [
+        { label: "Medium", priceHalalas: 22000, isDefault: true, sortOrder: 0 },
+      ],
     },
     {
       slug: "souk-textile-runner",
       name: "Souk Textile Runner",
       description: "Handwoven warmth for tables and thresholds.",
+      longDescription: "A woven runner with heritage geometry for tables and entries.",
       category: "Textiles",
       basename: "product-4",
       sortOrder: 3,
+      variants: [
+        { label: "180cm", priceHalalas: 18500, isDefault: true, sortOrder: 0 },
+      ],
     },
     {
       slug: "crescent-pendant",
       name: "Crescent Pendant",
       description: "A refined everyday talisman in warm metal.",
+      longDescription: "Everyday wear with quiet meaning — warm metal, refined finish.",
       category: "Jewelry",
       basename: "product-5",
       sortOrder: 4,
+      variants: [
+        { label: "One size", priceHalalas: 12000, isDefault: true, sortOrder: 0 },
+      ],
     },
     {
       slug: "desert-musk-set",
       name: "Desert Musk Gift Set",
       description: "Bakhoor and burner, ready to give.",
+      longDescription: "Gift-ready set with bakhoor and a compact burner.",
       category: "Gifts",
       basename: "product-6",
       sortOrder: 5,
+      variants: [
+        { label: "Gift set", priceHalalas: 19900, isDefault: true, sortOrder: 0 },
+      ],
     },
     {
       slug: "heritage-scarf",
       name: "Heritage Scarf",
       description: "Light textile with a classic geometric border.",
+      longDescription: "Light scarf with a classic geometric border — easy to gift.",
       category: "Textiles",
       basename: "product-7",
       sortOrder: 6,
+      variants: [
+        { label: "One size", priceHalalas: 9500, isDefault: true, sortOrder: 0 },
+      ],
     },
   ];
 
@@ -154,23 +184,43 @@ async function main() {
         slug: p.slug,
         name: p.name,
         description: p.description,
+        longDescription: p.longDescription,
         category: p.category,
         mediaUrl: media.mediaUrl,
         mediaType: media.mediaType,
         alt: p.basename,
         sortOrder: p.sortOrder,
+        isActive: true,
       },
       update: {
         name: p.name,
         description: p.description,
+        longDescription: p.longDescription,
         category: p.category,
         mediaUrl: media.mediaUrl,
         mediaType: media.mediaType,
         alt: p.basename,
         sortOrder: p.sortOrder,
+        isActive: true,
       },
     });
     seededProductIds.push(row.id);
+
+    // Replace variants for a clean demo seed
+    await prisma.productVariant.deleteMany({ where: { productId: row.id } });
+    for (const v of p.variants) {
+      await prisma.productVariant.create({
+        data: {
+          productId: row.id,
+          label: v.label,
+          priceHalalas: v.priceHalalas,
+          isDefault: v.isDefault,
+          isActive: true,
+          sortOrder: v.sortOrder,
+          sku: `${p.slug}-${v.sortOrder + 1}`,
+        },
+      });
+    }
   }
 
   // Featured slots 1–4 point at the first four products
@@ -182,6 +232,109 @@ async function main() {
       create: { position, productId },
       update: { productId },
     });
+  }
+
+  await prisma.commerceSettings.upsert({
+    where: { id: "default" },
+    create: {
+      id: "default",
+      purchasePolicy:
+        "By placing an order you confirm that product details, delivery fees, and timing are understood. Orders are confirmed without online payment in this demo — our team may contact you to arrange payment. Returns are accepted for unused items within 7 days where permitted by Saudi consumer law. Al Athaq Boutique reserves the right to cancel orders outside delivery zones.",
+      deliveryInstructions:
+        "We deliver only within listed zones. Please ensure someone is available during your chosen slot. Apartment/villa number and a reachable mobile number are required. Drivers may call on arrival. Lead times shown per zone are estimates.",
+      orderPrefix: "ATH",
+      shopWhatsAppE164: "+966500000000",
+      currencyLabel: "SAR",
+      orderSequence: 0,
+    },
+    update: {
+      purchasePolicy:
+        "By placing an order you confirm that product details, delivery fees, and timing are understood. Orders are confirmed without online payment in this demo — our team may contact you to arrange payment. Returns are accepted for unused items within 7 days where permitted by Saudi consumer law. Al Athaq Boutique reserves the right to cancel orders outside delivery zones.",
+      deliveryInstructions:
+        "We deliver only within listed zones. Please ensure someone is available during your chosen slot. Apartment/villa number and a reachable mobile number are required. Drivers may call on arrival. Lead times shown per zone are estimates.",
+      shopWhatsAppE164: "+966500000000",
+      currencyLabel: "SAR",
+    },
+  });
+
+  // Delivery zones + slots (replace demo rows by name)
+  const zoneDefs = [
+    {
+      name: "Riyadh — Central",
+      country: "SA",
+      city: "Riyadh",
+      district: "Olaya",
+      shippingFeeHalalas: 2500,
+      leadTimeDaysMin: 1,
+      leadTimeDaysMax: 2,
+      etaLabel: "1–2 days",
+      slots: [
+        { label: "Morning 9:00–12:00", startTime: "09:00", endTime: "12:00", sortOrder: 0 },
+        { label: "Afternoon 13:00–17:00", startTime: "13:00", endTime: "17:00", sortOrder: 1 },
+        { label: "Evening 18:00–21:00", startTime: "18:00", endTime: "21:00", sortOrder: 2 },
+      ],
+    },
+    {
+      name: "Jeddah — Corniche",
+      country: "SA",
+      city: "Jeddah",
+      district: "Corniche",
+      shippingFeeHalalas: 3500,
+      leadTimeDaysMin: 2,
+      leadTimeDaysMax: 4,
+      etaLabel: "2–4 days",
+      slots: [
+        { label: "Morning 10:00–13:00", startTime: "10:00", endTime: "13:00", sortOrder: 0 },
+        { label: "Afternoon 14:00–18:00", startTime: "14:00", endTime: "18:00", sortOrder: 1 },
+      ],
+    },
+  ];
+
+  for (const z of zoneDefs) {
+    const existing = await prisma.deliveryZone.findFirst({
+      where: { name: z.name },
+    });
+    const zone = existing
+      ? await prisma.deliveryZone.update({
+          where: { id: existing.id },
+          data: {
+            country: z.country,
+            city: z.city,
+            district: z.district,
+            isActive: true,
+            shippingFeeHalalas: z.shippingFeeHalalas,
+            leadTimeDaysMin: z.leadTimeDaysMin,
+            leadTimeDaysMax: z.leadTimeDaysMax,
+            etaLabel: z.etaLabel,
+          },
+        })
+      : await prisma.deliveryZone.create({
+          data: {
+            name: z.name,
+            country: z.country,
+            city: z.city,
+            district: z.district,
+            isActive: true,
+            shippingFeeHalalas: z.shippingFeeHalalas,
+            leadTimeDaysMin: z.leadTimeDaysMin,
+            leadTimeDaysMax: z.leadTimeDaysMax,
+            etaLabel: z.etaLabel,
+          },
+        });
+
+    await prisma.deliverySlot.deleteMany({ where: { zoneId: zone.id } });
+    for (const s of z.slots) {
+      await prisma.deliverySlot.create({
+        data: {
+          zoneId: zone.id,
+          label: s.label,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          sortOrder: s.sortOrder,
+          isActive: true,
+        },
+      });
+    }
   }
 
   // Bootstrap admin from env (hashed — never store plaintext)
@@ -212,7 +365,9 @@ async function main() {
     );
   }
 
-  console.log("Seed complete: SiteSettings, Products, Featured, AdminUser.");
+  console.log(
+    "Seed complete: SiteSettings, Products+Variants, Featured, CommerceSettings, Zones/Slots, AdminUser.",
+  );
 }
 
 main()

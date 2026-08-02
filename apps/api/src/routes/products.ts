@@ -17,6 +17,9 @@ productsRouter.use(requireAuth, requireFreshPassword);
 productsRouter.get("/", async (_req, res) => {
   const products = await prisma.product.findMany({
     orderBy: { sortOrder: "asc" },
+    include: {
+      variants: { orderBy: { sortOrder: "asc" } },
+    },
   });
   return res.json({ products });
 });
@@ -24,6 +27,7 @@ productsRouter.get("/", async (_req, res) => {
 productsRouter.get("/:id", async (req, res) => {
   const product = await prisma.product.findUnique({
     where: { id: req.params.id },
+    include: { variants: { orderBy: { sortOrder: "asc" } } },
   });
   if (!product) return res.status(404).json({ error: "Product not found" });
   return res.json({ product });
@@ -39,7 +43,12 @@ productsRouter.post("/", async (req, res) => {
   }
 
   try {
-    const product = await prisma.product.create({ data: parsed.data });
+    const product = await prisma.product.create({
+      data: {
+        ...parsed.data,
+        longDescription: parsed.data.longDescription ?? "",
+      },
+    });
     void triggerStorefrontRevalidate();
     return res.status(201).json({ product });
   } catch (err) {
