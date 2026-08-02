@@ -149,7 +149,6 @@ export default function CheckoutPage() {
     setBusy(true);
     setError(null);
     try {
-      const path = mode === "account" && !customer ? "/customer/login" : "/customer/register";
       // If already logged in, skip
       if (customer) {
         setBusy(false);
